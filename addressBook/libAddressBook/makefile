@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -std=c11 -Wall
+CFLAGS = -std=gnu11 -Wall -Wpedantic
 
 LIBRARY_NAME = addressbook
 SOURCE_FILES = contact.c listAddressBook.c treeAddressBook.c
@@ -7,13 +7,19 @@ OBJECT_FILES = contact.o listAddressBook.o treeAddressBook.o
 
 all: shared static
 
-shared:
-	$(CC) $(CFLAGS) -fPIC -shared $(SOURCE_FILES) -o lib$(LIBRARY_NAME).so
+shared: lib$(LIBRARY_NAME).so
+	
+lib$(LIBRARY_NAME).so: $(SOURCE_FILES)
+	$(CC) $(CFLAGS) -fPIC -shared $^ -o $@
 
-static: $(OBJECT_FILES)
-	ar rcs lib$(LIBRARY_NAME).a $^
+static: lib$(LIBRARY_NAME).a
 
-compile: $(SOURCE_FILES)
+lib$(LIBRARY_NAME).a: $(OBJECT_FILES)
+	ar rcs $@ $^
+
+compile: $(OBJECT_FILES)
+
+$(OBJECT_FILES): $(SOURCE_FILES)
 	$(CC) -c $(CFLAGS) $^
 
 clean:

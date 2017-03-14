@@ -6,68 +6,53 @@
 #define ADDRESSBOOK_TIMER_H
 
 #include <time.h>
-#include <sys/times.h>
+#include <sys/resource.h>
 
 
 #define INIT_MEASURE_TIME() \
-            tms _start; \
-            tms _end; \
-            clock_t _rStart, _rEnd; \
-            ClockInterval _clockInterval;
+            timespec _rStart, _rEnd; \
+            rusage _start, _end; \
+            TimingInfo _timingInfo;
 
 #define MEASURE_TIME(description, actions) \
-            _rStart = times(&_start); \
+            getrusage(RUSAGE_SELF, &_start); \
+            clock_gettime(CLOCK_MONOTONIC_RAW, &_rStart); \
             actions \
-            _rEnd = times(&_end); \
-            _clockInterval = ClockInterval_get(_start, _end, _rStart, _rEnd); \
-            ClockInterval_print(_clockInterval, description);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &_rEnd); \
+            getrusage(RUSAGE_SELF, &_end); \
+            _timingInfo = TimingInfo_fromInterval(_rStart, _rEnd, _start, _end); \
+            TimingInfo_print(description, _timingInfo);
 
 
-typedef double Seconds;
+typedef struct timeval timeval;
+typedef struct timespec timespec;
+typedef struct rusage rusage;
 
-typedef struct tms tms;
-typedef struct ClockInterval ClockInterval;
-typedef struct SecondsInterval SecondsInterval;
+typedef struct TimingInfo TimingInfo;
 
-struct ClockInterval {
-    clock_t realClocks;
-    clock_t userClocks;
-    clock_t systemClocks;
-};
 
-struct SecondsInterval {
-    Seconds realSeconds;
-    Seconds userSeconds;
-    Seconds systemSeconds;
+struct TimingInfo {
+    timeval real;
+    timeval user;
+    timeval system;
 };
 
 
-long getClocksPerSec(void);
+timeval timespec_toTimeVal(timespec value);
 
+timeval timeval_add(timeval a, timeval b);
 
-clock_t clock_t_add(clock_t a, clock_t b);
+timeval timeval_sub(timeval a, timeval b);
 
-Seconds Seconds_div(Seconds a, Seconds b);
+TimingInfo TimingInfo_new();
 
-ClockInterval ClockInterval_mapFunction(ClockInterval a, ClockInterval b, clock_t (*func)(clock_t, clock_t));
+TimingInfo TimingInfo_add(TimingInfo a, TimingInfo b);
 
-SecondsInterval SecondsInterval_mapFunctionSeconds(SecondsInterval a, Seconds b, Seconds (*func)(Seconds, Seconds));
+TimingInfo TimingInfo_divLong(TimingInfo a, long b);
 
+TimingInfo TimingInfo_fromInterval(timespec rStart, timespec rEnd, rusage start, rusage end);
 
-ClockInterval ClockInterval_add(ClockInterval a, ClockInterval b);
-
-SecondsInterval SecondsInterval_divSeconds(SecondsInterval a, Seconds b);
-
-SecondsInterval ClockInterval_toSeconds(ClockInterval interval);
-
-
-tms tms_diff(tms end, tms start);
-
-ClockInterval ClockInterval_get(tms start, tms end, clock_t rStart, clock_t rEnd);
-
-void ClockInterval_print(ClockInterval interval, char *description);
-
-void SecondsInterval_print(SecondsInterval interval, char *description);
+void TimingInfo_print(char *description, TimingInfo info);
 
 
 #endif //ADDRESSBOOK_TIMER_H

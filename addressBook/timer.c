@@ -3,100 +3,97 @@
 //
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 #include "timer.h"
 
 
-static const char *LOG_TIME_FORMAT = "real: %10lfs\tuser: %10lfs\tsystem: %10lfs\t\t%s\n";
-static long sysClocksPerSec = NULL;
+static const char *TIMING_INFO_FORMAT = "real: %3ld.%06lds\tuser: %3ld.%06lds\tsystem: %3ld.%06lds\t\t%s\n";
 
 
-long getClocksPerSec(void) {
-    return (sysClocksPerSec != NULL) ? sysClocksPerSec : (sysClocksPerSec = sysconf(_SC_CLK_TCK));
+timeval timespec_toTimeVal(timespec value) {
+    timeval result;
+    result.tv_sec = value.tv_sec;
+    result.tv_usec = value.tv_nsec / 1000;
+    return result;
 }
 
+timeval timeval_add(timeval a, timeval b) {
+    timeval result;
 
-clock_t clock_t_add(clock_t a, clock_t b) {
-    return a + b;
-}
+    __suseconds_t usSum = a.tv_usec + b.tv_usec;
 
-Seconds Seconds_div(Seconds a, Seconds b) {
-    return a / b;
-}
-
-ClockInterval ClockInterval_mapFunction(ClockInterval a, ClockInterval b, clock_t (*func)(clock_t, clock_t)) {
-    ClockInterval result;
-
-    result.realClocks = func(a.realClocks, b.realClocks);
-    result.userClocks = func(a.userClocks, b.userClocks);
-    result.systemClocks = func(a.systemClocks, b.systemClocks);
+    result.tv_sec = (a.tv_sec + b.tv_sec) + (usSum >= 1000000 ? 1 : 0);
+    result.tv_usec = (usSum >= 1000000) ? (1000000 - usSum) : usSum;
 
     return result;
 }
 
-SecondsInterval SecondsInterval_mapFunctionSeconds(SecondsInterval a, Seconds b, Seconds (*func)(Seconds, Seconds)) {
-    SecondsInterval result;
+timeval timeval_sub(timeval a, timeval b) {
+    timeval result;
 
-    result.realSeconds = func(a.realSeconds, b);
-    result.userSeconds = func(a.userSeconds, b);
-    result.systemSeconds = func(a.systemSeconds, b);
+    __suseconds_t usDiff = a.tv_usec - b.tv_usec;
 
-    return result;
-}
-
-
-ClockInterval ClockInterval_add(ClockInterval a, ClockInterval b) {
-    return ClockInterval_mapFunction(a, b, clock_t_add);
-}
-
-SecondsInterval SecondsInterval_divSeconds(SecondsInterval a, Seconds b) {
-    return SecondsInterval_mapFunctionSeconds(a, b, Seconds_div);
-}
-
-SecondsInterval ClockInterval_toSeconds(ClockInterval interval) {
-    SecondsInterval result;
-
-    result.realSeconds = interval.realClocks / (Seconds) getClocksPerSec();
-    result.userSeconds = interval.userClocks / (Seconds) getClocksPerSec();
-    result.systemSeconds = interval.systemClocks / (Seconds) getClocksPerSec();
+    result.tv_sec = (a.tv_sec - b.tv_sec) - (usDiff >= 0 ? 0 : 1);
+    result.tv_usec = (usDiff >= 0) ? usDiff : (1000000 + usDiff);
 
     return result;
 }
 
+timeval timeval_divLong(timeval a, long b) {
+    timeval result;
 
-tms tms_diff(tms end, tms start) {
-    tms result;
-
-    result.tms_utime = end.tms_utime - start.tms_utime;
-    result.tms_stime = end.tms_stime - start.tms_stime;
-
-    result.tms_cutime = end.tms_cutime - start.tms_cutime;
-    result.tms_cstime = end.tms_cstime - start.tms_cstime;
+    result.tv_sec = a.tv_sec / b;
+    result.tv_usec = a.tv_usec / b;
 
     return result;
 }
 
-ClockInterval ClockInterval_get(tms start, tms end, clock_t rStart, clock_t rEnd) {
-    tms intervals = tms_diff(end, start);
+TimingInfo TimingInfo_new() {
+    timeval zero;
+    zero.tv_sec = zero.tv_usec = 0;
 
-    ClockInterval result;
-    result.realClocks = rEnd - rStart;
-    result.userClocks = intervals.tms_utime + intervals.tms_cutime;
-    result.systemClocks = intervals.tms_stime + intervals.tms_cstime;
+    TimingInfo result;
+    result.real = result.user = result.system = zero;
 
     return result;
 }
 
-void ClockInterval_print(ClockInterval interval, char *description) {
-    SecondsInterval_print(ClockInterval_toSeconds(interval), description);
+TimingInfo TimingInfo_add(TimingInfo a, TimingInfo b) {
+    TimingInfo result;
+
+    result.real = timeval_add(a.real, b.real);
+    result.user = timeval_add(a.user, b.user);
+    result.system = timeval_add(a.system, b.system);
+
+    return result;
 }
 
-void SecondsInterval_print(SecondsInterval interval, char *description) {
+TimingInfo TimingInfo_divLong(TimingInfo a, long b) {
+    TimingInfo result;
+
+    result.real = timeval_divLong(a.real, b);
+    result.user = timeval_divLong(a.user, b);
+    result.system = timeval_divLong(a.system, b);
+
+    return result;
+}
+
+TimingInfo TimingInfo_fromInterval(timespec rStart, timespec rEnd, rusage start, rusage end) {
+    TimingInfo result;
+
+    result.real = timeval_sub(timespec_toTimeVal(rEnd), timespec_toTimeVal(rStart));
+    result.user = timeval_sub(end.ru_utime, start.ru_utime);
+    result.system = timeval_sub(end.ru_stime, start.ru_stime);
+
+    return result;
+}
+
+void TimingInfo_print(char *description, TimingInfo info) {
     if (description == NULL) return;
 
-    printf(LOG_TIME_FORMAT,
-           interval.realSeconds, interval.userSeconds, interval.systemSeconds,
+    printf(TIMING_INFO_FORMAT,
+           info.real.tv_sec, info.real.tv_usec,
+           info.user.tv_sec, info.user.tv_usec,
+           info.system.tv_sec, info.system.tv_usec,
            description);
 }
