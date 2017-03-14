@@ -6,7 +6,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic")
 
 add_subdirectory(libAddressBook)
 
-set(SOURCE_FILES benchmark.c benchmark.h)
+set(SOURCE_FILES benchmark.c timer.c timer.h timer.h)
 add_executable(benchmark ${SOURCE_FILES})
 
 target_link_libraries(benchmark addressBook)

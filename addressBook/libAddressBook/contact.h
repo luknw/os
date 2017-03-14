@@ -16,7 +16,7 @@ typedef enum ContactKey {
     SURNAME,
     BIRTHDATE,
     EMAIL,
-    PHONE,
+    PHONE
 } ContactKey;
 
 struct Contact {

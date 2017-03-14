@@ -1,16 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
+#include "timer.h"
 #include "libAddressBook/addressBook.h"
-
 
 static const int CONTACT_COUNT = 1000;
 static const int BUFFER_SIZE = 128;
 static const char *DELIMITERS = ",\n";
-static const char *LOG_TIME_FORMAT = "%lf s\t\t%s\n";
-
 
 static void parseContact(char *raw, Contact *parsed) {
     strcpy(parsed->name, strtok(raw, DELIMITERS));
@@ -42,75 +39,74 @@ static void cleanup(Contact **contacts) {
     free(contacts);
 }
 
-double diffclock(clock_t end, clock_t start) {
-    return (end - start) / (double) CLOCKS_PER_SEC;
+
+static void benchmarkListAddressBook(ListAddressBook **book, Contact **contacts) {
+    INIT_MEASURE_TIME()
+
+    MEASURE_TIME("ListAddressBook - creating", *book = ListAddressBook_new();)
+
+    ClockInterval avgAddingClocks;
+    avgAddingClocks.realClocks = 0;
+    avgAddingClocks.userClocks = 0;
+    avgAddingClocks.systemClocks = 0;
+
+    MEASURE_TIME("ListAddressBook - adding first contact", ListAddressBook_addContact(*book, contacts[0]);)
+    avgAddingClocks = ClockInterval_add(avgAddingClocks, _clockInterval);
+
+
+    MEASURE_TIME("ListAddressBook - adding almost all contacts",
+                 for (int i = 1; i < CONTACT_COUNT - 1; ++i) {
+                     ListAddressBook_addContact(*book, contacts[i]);
+
+                 })
+    avgAddingClocks = ClockInterval_add(avgAddingClocks, _clockInterval);
+
+    MEASURE_TIME("ListAddressBook - adding last contact",
+                 ListAddressBook_addContact(*book, contacts[CONTACT_COUNT - 1]);)
+    avgAddingClocks = ClockInterval_add(avgAddingClocks, _clockInterval);
+
+    SecondsInterval avgAddingSeconds = ClockInterval_toSeconds(avgAddingClocks);
+    avgAddingSeconds = SecondsInterval_divSeconds(avgAddingSeconds, (Seconds) CONTACT_COUNT);
+
+    SecondsInterval_print(avgAddingSeconds, "ListAddressBook - adding average");
+
+    MEASURE_TIME("ListAddressBook - finding optimistic",
+                 ListAddressBook_findContact(*book, (*book)->key,
+                                             Contact_getValue((*book)->contacts->next->contact, (*book)->key));)
+
+    MEASURE_TIME("ListAddressBook - finding pessimistic",
+                 ListAddressBook_findContact(*book, (*book)->key,
+                                             Contact_getValue((*book)->contacts->prev->contact, (*book)->key));)
+
+    MEASURE_TIME("ListAddressBook - rearranging", ListAddressBook_rearrangeByKey(book, PHONE);)
+
+    MEASURE_TIME("ListAddressBook - deleting pessimistic",
+                 ListAddressBook_removeContact(*book, (*book)->contacts->prev->contact);)
+
+    MEASURE_TIME("ListAddressBook - deleting optimistic",
+                 ListAddressBook_removeContact(*book, (*book)->contacts->next->contact);)
+
 }
 
-void logTime(void (*action)(void), char *description) {
-    clock_t start = clock();
-
-    action();
-
-    clock_t end = clock();
-
-    printf(LOG_TIME_FORMAT, diffclock(end, start), description);
+static void benchmarkTreeAddressBook(TreeAddressBook *book, Contact **contacts) {
+    //todo
 }
+
 
 int main(void) {
     Contact **contacts = calloc(CONTACT_COUNT, sizeof(Contact *));
     loadContacts(contacts);
 
-    clock_t start, end;
+    ListAddressBook *listBook = NULL;
+    benchmarkListAddressBook(&listBook, contacts);
 
-    ListAddressBook *listBook;
-
-    void createListAddressBook(void) {
-        listBook = ListAddressBook_new();
-    }
-    logTime(createListAddressBook, "ListAddressBook - creating");
-
-    double time_interval;
-    double avg_adding_time = 0;
-
-    start = clock();
-    ListAddressBook_addContact(listBook, contacts[0]);
-    end = clock();
-    time_interval = diffclock(end, start);
-    logTime(time_interval, "ListAddressBook - adding first contact");
-    avg_adding_time += time_interval;
-
-    for (int i = 1; i < CONTACT_COUNT - 1; ++i) {
-        start = clock();
-        ListAddressBook_addContact(listBook, contacts[i]);
-        end = clock();
-        avg_adding_time += diffclock(end, start);
-    }
-
-
-    start = clock();
-    ListAddressBook_addContact(listBook, contacts[0]);
-    end = clock();
-    time_interval = diffclock(end, start);
-    logTime(time_interval, "ListAddressBook - adding last contact");
-    avg_adding_time += time_interval;
-
-    avg_adding_time /= CONTACT_COUNT;
-    logTime(avg_adding_time, "ListAddressBook - adding average");
-
-    start = clock();
-    ListAddressBook_findContact(listBook, listBook->key,
-                                Contact_getValue(listBook->contacts->next->contact, listBook->key));
-    end = clock();
-    logTime(diffclock(end, start), "ListAddressBook - finding optimistic");
-
-
-    start = clock();
-    ListAddressBook_findContact(listBook, listBook->key,
-                                Contact_getValue(listBook->contacts->prev->contact, listBook->key));
-    end = clock();
-    logTime(diffclock(end, start), "ListAddressBook - finding pessimistic");
+//    TreeAddressBook *treeBook = NULL;
+//    benchmarkTreeAddressBook(treeBook, contacts);
 
     ListAddressBook_delete(listBook);
+//    TreeAddressBook_delete(treeBook);
+
     cleanup(contacts);
+
     return 0;
 }
