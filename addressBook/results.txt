@@ -1,0 +1,261 @@
+Wyniki testów wskazują, że:
+- większość podstawowych operacji wykonuje się w granicach rozdzielczości
+  użytego zegara
+- w celu uzyskania jakichkolwiek znaczących wyników zwiększono zbiór danych
+  do 16000 pozycji i zmierzono średni oraz sumaryczny czas dodawania rekordów
+- uzyskane wyniki wciąż różnią się w granicach niepewności pomiarowej
+  (kilkaset ms)
+- znacznie większe znaczenie od użytych flag optymalizacyjnych ma zmiana
+  struktury danych i różnica w złożoności operacji
+- program operuje w znaczącej mierze w trybie użytkownika
+
+dynamic:
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.083628s	user:   2.084000s	system:   0.000000s		ListAddressBook - adding almost all contacts
+real:   0.000125s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000005s	user:   0.000005s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000588s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.260156s	user:   2.260000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.000884s	user:   0.000000s	system:   0.004000s		ListAddressBook - deleting pessimistic
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.033981s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000002s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.041004s	user:   0.040000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.000730s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.383005s	user:   2.384000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000220s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000301s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+
+shared:
+real:   0.000002s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000002s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.039745s	user:   2.036000s	system:   0.004000s		ListAddressBook - adding almost all contacts
+real:   0.000122s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000002s	user:   0.000002s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000004s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000476s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.784752s	user:   2.784000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.000765s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting pessimistic
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.032112s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000003s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000002s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000003s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.041257s	user:   0.040000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.000747s	user:   0.004000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.397286s	user:   2.396000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000220s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000301s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+
+static:
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.146045s	user:   2.120000s	system:   0.008000s		ListAddressBook - adding almost all contacts
+real:   0.000110s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000009s	user:   0.000007s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000587s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.446716s	user:   2.444000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.000779s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting pessimistic
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000000s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.031500s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000001s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000000s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.040576s	user:   0.040000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.000715s	user:   0.004000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.349252s	user:   2.348000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000241s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000297s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+
+optimizer O1:
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.069549s	user:   2.052000s	system:   0.000000s		ListAddressBook - adding almost all contacts
+real:   0.000149s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000004s	user:   0.000003s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000522s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.228997s	user:   2.212000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.000870s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting pessimistic
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.032762s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000002s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.041520s	user:   0.044000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.000738s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.358931s	user:   2.348000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000241s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000295s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+
+optimizer O2:
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.125962s	user:   2.124000s	system:   0.000000s		ListAddressBook - adding almost all contacts
+real:   0.000115s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000007s	user:   0.000007s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000513s	user:   0.004000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.298920s	user:   2.296000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.000781s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting pessimistic
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000000s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.032105s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000002s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000000s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.040654s	user:   0.044000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.000785s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.353632s	user:   2.352000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000220s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000294s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+
+optimizer O3:
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.058544s	user:   2.060000s	system:   0.000000s		ListAddressBook - adding almost all contacts
+real:   0.000115s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000003s	user:   0.000003s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000463s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.265692s	user:   2.264000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.000929s	user:   0.000000s	system:   0.004000s		ListAddressBook - deleting pessimistic
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000000s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.032490s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000002s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.040945s	user:   0.040000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.000941s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.342170s	user:   2.344000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000227s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000304s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+
+optimizer O0:
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.090368s	user:   2.088000s	system:   0.000000s		ListAddressBook - adding almost all contacts
+real:   0.000124s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000005s	user:   0.000005s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000564s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.261562s	user:   2.264000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.001024s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting pessimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.031336s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000001s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.040872s	user:   0.040000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.000757s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.351413s	user:   2.352000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000220s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000323s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+
+optimizer Os:
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.140520s	user:   2.136000s	system:   0.004000s		ListAddressBook - adding almost all contacts
+real:   0.000109s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000008s	user:   0.000008s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000439s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.247244s	user:   2.248000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.000774s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting pessimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.032015s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000002s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000000s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.040054s	user:   0.040000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.000705s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.344305s	user:   2.344000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000220s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000294s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+
+optimizer Ofast:
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.108272s	user:   2.088000s	system:   0.004000s		ListAddressBook - adding almost all contacts
+real:   0.000111s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000006s	user:   0.000005s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000458s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.285440s	user:   2.268000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.000766s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting pessimistic
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.031774s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000003s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000001s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000000s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.040549s	user:   0.040000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.000716s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.399656s	user:   2.396000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000220s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000294s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+
+optimizer Og:
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding first contact
+real:   2.074549s	user:   2.076000s	system:   0.000000s		ListAddressBook - adding almost all contacts
+real:   0.000116s	user:   0.000000s	system:   0.000000s		ListAddressBook - adding last contact
+real:   0.000004s	user:   0.000004s	system:   0.000000s		ListAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding optimistic
+real:   0.000511s	user:   0.000000s	system:   0.000000s		ListAddressBook - finding pessimistic
+real:   2.301349s	user:   2.304000s	system:   0.000000s		ListAddressBook - rearranging
+real:   0.000881s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting pessimistic
+real:   0.000000s	user:   0.000000s	system:   0.000000s		ListAddressBook - deleting optimistic
+
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - creating
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding first contact
+real:   0.034140s	user:   0.032000s	system:   0.000000s		TreeAddressBook - adding almost all contacts
+real:   0.000002s	user:   0.000000s	system:   0.000000s		TreeAddressBook - adding last contact
+real:   0.000002s	user:   0.000002s	system:   0.000000s		TreeAddressBook - adding average
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding optimistic
+real:   0.000001s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting optimistic
+real:   0.051337s	user:   0.052000s	system:   0.000000s		TreeAddressBook - rearranging
+real:   0.001101s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deallocating
+real:   2.379293s	user:   2.380000s	system:   0.000000s		TreeAddressBook - adding pessimistic data
+real:   0.000220s	user:   0.000000s	system:   0.000000s		TreeAddressBook - finding pessimistic
+real:   0.000306s	user:   0.000000s	system:   0.000000s		TreeAddressBook - deleting pessimistic
+

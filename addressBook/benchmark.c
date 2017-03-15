@@ -53,7 +53,7 @@ static void (*pTreeAddressBook_delete)(TreeAddressBook *);
 
 static void *loadSymbols() {
 #ifdef DYNAMIC_LOADING
-    void *symbols = dlopen("libAddressBook/libaddressbook.so", RTLD_LAZY);
+    void *symbols = dlopen("libaddressbook/libaddressbook.so", RTLD_LAZY);
 
     pContact_new = dlsym(symbols, "Contact_new");
     pContact_delete = dlsym(symbols, "Contact_delete");
