@@ -3,6 +3,7 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "timer.h"
 
@@ -96,4 +97,9 @@ void TimingInfo_print(char *description, TimingInfo info) {
            info.user.tv_sec, info.user.tv_usec,
            info.system.tv_sec, info.system.tv_usec,
            description);
+
+    if (ferror(stdout)) {
+        fprintf(stderr, "Error writing to stdout");
+        clearerr(stdout);
+    }
 }

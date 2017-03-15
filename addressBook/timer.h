@@ -15,11 +15,19 @@
             TimingInfo _timingInfo;
 
 #define MEASURE_TIME(description, actions) \
-            getrusage(RUSAGE_SELF, &_start); \
-            clock_gettime(CLOCK_MONOTONIC_RAW, &_rStart); \
+            if(getrusage(RUSAGE_SELF, &_start) == -1) { \
+                perror("Error measuring time: "); \
+            } \
+            if(clock_gettime(CLOCK_MONOTONIC_RAW, &_rStart) == -1) { \
+                perror("Error measuring time: "); \
+            } \
             actions \
-            clock_gettime(CLOCK_MONOTONIC_RAW, &_rEnd); \
-            getrusage(RUSAGE_SELF, &_end); \
+            if(clock_gettime(CLOCK_MONOTONIC_RAW, &_rEnd) == -1) { \
+                perror("Error measuring time: "); \
+            } \
+            if(getrusage(RUSAGE_SELF, &_end) == -1) { \
+                perror("Error measuring time: "); \
+            } \
             _timingInfo = TimingInfo_fromInterval(_rStart, _rEnd, _start, _end); \
             TimingInfo_print(description, _timingInfo);
 

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "treeAddressBook.h"
 
@@ -20,6 +21,10 @@ static void TreeAddressBook_deleteSubTree(TreeContactNode *root) {
 
 TreeAddressBook *TreeAddressBook_new(void) {
     TreeAddressBook *addressBook = malloc(sizeof(TreeAddressBook));
+    if (addressBook == NULL) {
+        perror("Cannot allocate address book: ");
+        exit(1);
+    }
 
     addressBook->contacts = NULL;
     addressBook->key = DEFAULT_CONTACT_KEY;
@@ -67,6 +72,10 @@ void TreeAddressBook_addContact(TreeAddressBook *addressBook, Contact *added) {
     addressBook->size += 1;
 
     TreeContactNode *addedNode = malloc(sizeof(TreeContactNode));
+    if (addedNode == NULL) {
+        perror("Cannot allocate contact: ");
+        exit(1);
+    }
     addedNode->contact = added;
     addedNode->left = NULL;
     addedNode->right = NULL;

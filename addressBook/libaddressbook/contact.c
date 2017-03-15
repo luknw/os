@@ -3,21 +3,32 @@
 //
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
 #include "contact.h"
 
 
-Contact *Contact_new(size_t keyLen) {
-    Contact *newContact = malloc(sizeof(Contact));
+static void *safeMalloc(size_t size) {
+    void *allocated = malloc(size);
+    if (allocated == NULL) {
+        perror("Cannot allocate memory: ");
+        exit(1);
+    }
+    return allocated;
+}
 
-    newContact->name = malloc(keyLen);
-    newContact->surname = malloc(keyLen);
-    newContact->birthDate = malloc(keyLen);
-    newContact->email = malloc(keyLen);
-    newContact->phone = malloc(keyLen);
-    newContact->address = malloc(keyLen);
+
+Contact *Contact_new(size_t keyLen) {
+    Contact *newContact = safeMalloc(sizeof(Contact));
+
+    newContact->name = safeMalloc(keyLen);
+    newContact->surname = safeMalloc(keyLen);
+    newContact->birthDate = safeMalloc(keyLen);
+    newContact->email = safeMalloc(keyLen);
+    newContact->phone = safeMalloc(keyLen);
+    newContact->address = safeMalloc(keyLen);
 
     return newContact;
 }

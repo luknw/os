@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "listAddressBook.h"
 
@@ -38,11 +39,19 @@ static ListContactNode *ListAddressBook_findNodeByValue(ListAddressBook *address
 
 ListAddressBook *ListAddressBook_new(void) {
     ListAddressBook *addressBook = malloc(sizeof(ListAddressBook));
+    if (addressBook == NULL) {
+        perror("Cannot allocate address book: ");
+        exit(1);
+    }
 
     addressBook->key = DEFAULT_CONTACT_KEY;
     addressBook->size = 0;
 
     ListContactNode *guard = malloc(sizeof(ListContactNode));
+    if (guard == NULL) {
+        perror("Cannot allocate contact: ");
+        exit(1);
+    }
     guard->contact = NULL;
     guard->prev = guard;
     guard->next = guard;
@@ -70,6 +79,10 @@ void ListAddressBook_addContact(ListAddressBook *addressBook, Contact *added) {
     addressBook->size += 1;
 
     ListContactNode *addedNode = malloc(sizeof(ListContactNode));
+    if (addedNode == NULL) {
+        perror("Cannot allocate contact: ");
+        exit(1);
+    }
     addedNode->contact = added;
 
     ListContactNode *beforeAdded = ListAddressBook_findLastLower(addressBook, added);

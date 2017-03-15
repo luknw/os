@@ -51,27 +51,45 @@ static void (*pTreeAddressBook_removeContact)(TreeAddressBook *, Contact *);
 static void (*pTreeAddressBook_delete)(TreeAddressBook *);
 
 
+#ifdef DYNAMIC_LOADING
+
+static void *safeDlsym(void *libHandle, char *name) {
+    void *loaded = dlsym(libHandle, name);
+    if (loaded == NULL) {
+        fprintf(stderr, "Error loading symbol - %s: %s\n", name, dlerror());
+        exit(1);
+    }
+    return loaded;
+}
+
+#endif
+
 static void *loadSymbols() {
 #ifdef DYNAMIC_LOADING
     void *symbols = dlopen("libaddressbook/libaddressbook.so", RTLD_LAZY);
 
-    pContact_new = dlsym(symbols, "Contact_new");
-    pContact_delete = dlsym(symbols, "Contact_delete");
-    pContact_getValue = dlsym(symbols, "Contact_getValue");
+    if (symbols == NULL) {
+        fprintf(stderr, "Error opening libaddressbook: %s", dlerror());
+        exit(1);
+    }
 
-    pListAddressBook_new = dlsym(symbols, "ListAddressBook_new");
-    pListAddressBook_addContact = dlsym(symbols, "ListAddressBook_addContact");
-    pListAddressBook_findContact = dlsym(symbols, "ListAddressBook_findContact");
-    pListAddressBook_rearrangeByKey = dlsym(symbols, "ListAddressBook_rearrangeByKey");
-    pListAddressBook_removeContact = dlsym(symbols, "ListAddressBook_removeContact");
-    pListAddressBook_delete = dlsym(symbols, "ListAddressBook_delete");
+    pContact_new = safeDlsym(symbols, "Contact_new");
+    pContact_delete = safeDlsym(symbols, "Contact_delete");
+    pContact_getValue = safeDlsym(symbols, "Contact_getValue");
 
-    pTreeAddressBook_new = dlsym(symbols, "TreeAddressBook_new");
-    pTreeAddressBook_addContact = dlsym(symbols, "TreeAddressBook_addContact");
-    pTreeAddressBook_findContact = dlsym(symbols, "TreeAddressBook_findContact");
-    pTreeAddressBook_rearrangeByKey = dlsym(symbols, "TreeAddressBook_rearrangeByKey");
-    pTreeAddressBook_removeContact = dlsym(symbols, "TreeAddressBook_removeContact");
-    pTreeAddressBook_delete = dlsym(symbols, "TreeAddressBook_delete");
+    pListAddressBook_new = safeDlsym(symbols, "ListAddressBook_new");
+    pListAddressBook_addContact = safeDlsym(symbols, "ListAddressBook_addContact");
+    pListAddressBook_findContact = safeDlsym(symbols, "ListAddressBook_findContact");
+    pListAddressBook_rearrangeByKey = safeDlsym(symbols, "ListAddressBook_rearrangeByKey");
+    pListAddressBook_removeContact = safeDlsym(symbols, "ListAddressBook_removeContact");
+    pListAddressBook_delete = safeDlsym(symbols, "ListAddressBook_delete");
+
+    pTreeAddressBook_new = safeDlsym(symbols, "TreeAddressBook_new");
+    pTreeAddressBook_addContact = safeDlsym(symbols, "TreeAddressBook_addContact");
+    pTreeAddressBook_findContact = safeDlsym(symbols, "TreeAddressBook_findContact");
+    pTreeAddressBook_rearrangeByKey = safeDlsym(symbols, "TreeAddressBook_rearrangeByKey");
+    pTreeAddressBook_removeContact = safeDlsym(symbols, "TreeAddressBook_removeContact");
+    pTreeAddressBook_delete = safeDlsym(symbols, "TreeAddressBook_delete");
 
     return symbols;
 #else
@@ -109,15 +127,29 @@ static void parseContact(char *raw, Contact *parsed) {
 
 static void loadContacts(Contact **contacts) {
     char *buffer = malloc(BUFFER_SIZE);
+    if (buffer == NULL) {
+        perror("Cannot allocate buffer: ");
+        exit(1);
+    }
+
     FILE *data = fopen("data.csv", "r");
+    if (data == NULL) {
+        perror("Error opening data file: ");
+        exit(1);
+    }
 
     for (int i = 0; i < CONTACT_COUNT; ++i) {
-        fgets(buffer, BUFFER_SIZE, data);
+        if (fgets(buffer, BUFFER_SIZE, data) == NULL) {
+            fprintf(stderr, "Error reading from data file\n");
+            exit(1);
+        }
         contacts[i] = (*pContact_new)(DEFAULT_KEY_LEN);
         parseContact(buffer, contacts[i]);
     }
 
-    fclose(data);
+    if (fclose(data) == EOF) {
+        perror("Error closing data file: ");
+    }
     free(buffer);
 }
 
@@ -170,6 +202,10 @@ static void benchmarkListAddressBook(ListAddressBook **book, Contact **contacts)
                  (*pListAddressBook_removeContact)(*book, (*book)->contacts->next->contact);)
 
     printf("\n");
+    if (ferror(stdout)) {
+        fprintf(stderr, "Error writing to stdout");
+        clearerr(stdout);
+    }
 }
 
 static void benchmarkTreeAddressBook(TreeAddressBook **book, Contact **contacts) {
@@ -221,6 +257,10 @@ static void benchmarkTreeAddressBook(TreeAddressBook **book, Contact **contacts)
                  (*pTreeAddressBook_removeContact)(*book, contacts[2]);)
 
     printf("\n");
+    if (ferror(stdout)) {
+        fprintf(stderr, "Error writing to stdout");
+        clearerr(stdout);
+    }
 }
 
 
@@ -232,6 +272,11 @@ int main(void) {
 #endif
 
     Contact **contacts = calloc(CONTACT_COUNT, sizeof(Contact *));
+    if (contacts == NULL) {
+        perror("Cannot allocate contacts: ");
+        exit(1);
+    }
+
     loadContacts(contacts);
 
     ListAddressBook *listBook = NULL;
@@ -246,7 +291,9 @@ int main(void) {
     cleanup(contacts);
 
 #ifdef DYNAMIC_LOADING
-    dlclose(symbols);
+    if (dlclose(symbols) != 0) {
+        fprintf(stderr, "Error unloading libaddressbook: %s", dlerror());
+    }
 #endif
 
     return 0;
