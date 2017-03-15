@@ -13,7 +13,7 @@
 #include "timer.h"
 
 
-static const int CONTACT_COUNT = 16000;
+static const int CONTACT_COUNT = 1000;
 static const int BUFFER_SIZE = 128;
 static const char *DELIMITERS = ",\n";
 
