@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -std=gnu11 -Wall -Wpedantic
 
-ADDRESSBOOK_PATH = ./libAddressBook
+ADDRESSBOOK_PATH = ./libaddressbook
 
 EXECUTABLE_NAME = benchmark
 
@@ -17,7 +17,7 @@ all: dynamic shared static
 dynamic: $(EXECUTABLE_NAME)_dynamic
 
 $(EXECUTABLE_NAME)_dynamic: $(ADDRESSBOOK_PATH)/libaddressbook.so $(SOURCE_FILES)
-# todo
+	$(CC) $(CFLAGS) $(SOURCE_FILES) -ldl -o $@ -DDYNAMIC_LOADING
 
 
 shared: $(EXECUTABLE_NAME)_shared
