@@ -83,6 +83,12 @@ $ADDRESSBOOK_PATH/libaddressbook_Og.a: $(ADDRESSBOOK_PATH)
 	$(MAKE) --directory=$(ADDRESSBOOK_PATH) optimizer_Og
 
 
+debug: $(EXECUTABLE_NAME)_debug
+
+$(EXECUTABLE_NAME)_debug: $(ADDRESSBOOK_PATH)/libaddressbook.a $(SOURCE_FILES)
+	$(CC) $(CFLAGS) -static $(SOURCE_FILES) -L$(ADDRESSBOOK_PATH) -laddressbook -g -o $@
+
+
 test: test_dynamic test_shared test_static test_optimizers
 
 test_dynamic: dynamic
