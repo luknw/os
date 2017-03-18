@@ -1,8 +1,10 @@
-#include <argp.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <argp.h>
 
 #include "ioBenchmark.h"
+#include "safeAlloc.h"
+#include "safeFile.h"
 
 
 static const char *ACTION_GENERATE = "generate";
@@ -11,6 +13,8 @@ static const char *ACTION_SORT = "sort";
 
 static const char *PROVIDER_LIB = "lib";
 static const char *PROVIDER_SYS = "sys";
+
+static const char *RANDOM_SOURCE = "/dev/urandom";
 
 
 static const argp_option options[] =
@@ -44,39 +48,39 @@ static error_t parser(int key, char *arg, struct argp_state *state) {
             }
             return 0;
         case 'c':
-            args->recordCount = atoi(arg);
+            sscanf(arg, "%zu", &args->recordCount);
             return 0;
         case 's':
-            args->recordSize = atoi(arg);
+            sscanf(arg, "%zu", &args->recordSize);
             return 0;
         case 'f':
             args->filePath = arg;
         case ARGP_KEY_INIT:
             args->action = (Action) -1;
             args->provider = (ActionProvider) -1;
-            args->recordCount = -1;
-            args->recordSize = -1;
+            args->recordCount = 0;
+            args->recordSize = 0;
             args->filePath = NULL;
             return 0;
         case ARGP_KEY_END:
             if (args->action == -1) {
-                printf("No valid action specified, assuming: %s\n", ACTION_GENERATE);
+                printf("Assuming action: %s\n", ACTION_GENERATE);
                 args->action = DEFAULT_ARGS.action;
             }
             if (args->provider == -1) {
-                printf("No valid action provider specified, assuming: %s\n", PROVIDER_LIB);
+                printf("Assuming action provider: %s\n", PROVIDER_LIB);
                 args->provider = DEFAULT_ARGS.provider;
             }
-            if (args->recordCount == -1) {
-                printf("No valid record count specified, assuming: %d\n", DEFAULT_ARGS.recordCount);
+            if (args->recordCount == 0) {
+                printf("Assuming record count: %zu\n", DEFAULT_ARGS.recordCount);
                 args->recordCount = DEFAULT_ARGS.recordCount;
             }
-            if (args->recordSize == -1) {
-                printf("No valid record size specified, assuming: %d\n", DEFAULT_ARGS.recordSize);
+            if (args->recordSize == 0) {
+                printf("Assuming record size: %zu\n", DEFAULT_ARGS.recordSize);
                 args->recordSize = DEFAULT_ARGS.recordSize;
             }
             if (args->filePath == NULL) {
-                printf("No valid file specified, assuming: %s", DEFAULT_ARGS.filePath);
+                printf("Assuming file: %s\n", DEFAULT_ARGS.filePath);
                 args->filePath = DEFAULT_ARGS.filePath;
             }
         default:
@@ -87,25 +91,38 @@ static error_t parser(int key, char *arg, struct argp_state *state) {
 static const argp sArgp = {options, parser};
 
 
-void generate(int recordCount, int recordSize, char *filePath);
+void generate(size_t recordCount, size_t recordSize, char *filePath) {
+    char **records = safe_calloc(recordCount, recordSize);
 
-void shuffleLib(int recordCount, int recordSize, char *filePath);
+    FILE *randomSource = safe_fopen(RANDOM_SOURCE, "rb");
+    safe_fread(records, recordSize, recordCount, randomSource);
+    safe_fclose(randomSource);
 
-void shuffleSys(int recordCount, int recordSize, char *filePath);
+    FILE *recordFile = safe_fopen(filePath, "w");
+    safe_fwrite(records, recordSize, recordCount, recordFile);
+    safe_fclose(recordFile);
 
-void sortLib(int recordCount, int recordSize, char *filePath);
+    safe_free(records);
+}
 
-void sortSys(int recordCount, int recordSize, char *filePath);
+void shuffleLib(size_t recordCount, size_t recordSize, char *filePath);
+
+void shuffleSys(size_t recordCount, size_t recordSize, char *filePath);
+
+void sortLib(size_t recordCount, size_t recordSize, char *filePath);
+
+void sortSys(size_t recordCount, size_t recordSize, char *filePath);
 
 
 int main(int argc, char **argv) {
     Arguments args;
     argp_parse(&sArgp, argc, argv, 0, NULL, &args);
 
-//    switch (args.action) {
-//        case GENERATE:
-//            generate(args.recordCount, args.recordSize, args.filePath);
-//            break;
+    switch (args.action) {
+        case GENERATE:
+            generate(args.recordCount, args.recordSize, args.filePath);
+            break;
+    }
 //        case SHUFFLE:
 //            if (LIBRARY == args.provider) {
 //                shuffleLib(args.recordCount, args.recordSize, args.filePath);
@@ -120,7 +137,6 @@ int main(int argc, char **argv) {
 //                sortSys(args.recordCount, args.recordSize, args.filePath);
 //            }
 //            break;
-//    }
 
     return 0;
 }
