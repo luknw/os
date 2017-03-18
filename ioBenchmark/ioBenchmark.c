@@ -84,8 +84,7 @@ static error_t parser(int key, char *arg, struct argp_state *state) {
     }
 }
 
-//todo resolve typedef symbol duplication >struct<
-static const struct argp argp = {options, parser};
+static const argp sArgp = {options, parser};
 
 
 void generate(int recordCount, int recordSize, char *filePath);
@@ -101,7 +100,7 @@ void sortSys(int recordCount, int recordSize, char *filePath);
 
 int main(int argc, char **argv) {
     Arguments args;
-    argp_parse(&argp, argc, argv, 0, NULL, &args);
+    argp_parse(&sArgp, argc, argv, 0, NULL, &args);
 
 //    switch (args.action) {
 //        case GENERATE:

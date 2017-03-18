@@ -5,8 +5,7 @@
 #ifndef IOBENCHMARK_MAIN_H
 #define IOBENCHMARK_MAIN_H
 
-//todo resolve typedef issue
-//typedef struct argp argp;
+typedef struct argp argp;
 typedef struct argp_option argp_option;
 typedef struct argp_state argp_state;
 
