@@ -8,7 +8,9 @@
 #include <stdlib.h>
 
 
-void *safe_calloc (size_t __nmemb, size_t __size);
+void *safe_malloc (size_t size);
+
+void *safe_calloc (size_t count, size_t size);
 
 void safe_free (void *ptr);
 

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <argp.h>
+#include <stdbool.h>
 
 #include "ioBenchmark.h"
 #include "safeAlloc.h"
@@ -109,7 +110,33 @@ void shuffleLib(size_t recordCount, size_t recordSize, char *filePath);
 
 void shuffleSys(size_t recordCount, size_t recordSize, char *filePath);
 
-void sortLib(size_t recordCount, size_t recordSize, char *filePath);
+void sortLib(size_t recordCount, size_t recordSize, char *filePath) {
+    FILE *f = safe_fopen(filePath, "r+b");
+
+    unsigned char *a = safe_malloc(recordSize);
+    unsigned char *b = safe_malloc(recordSize);
+
+    bool sorted = false;
+    for (size_t i = recordCount - 1; i > 0 && !sorted; --i) {
+        sorted = true;
+        for (size_t j = 0; j < i; ++j) {
+            //todo safe fseek
+            safe_fread(a, sizeof(unsigned char), 1, f);
+            safe_fread(b, sizeof(unsigned char), 1, f);
+
+            if (*a < *b) {
+                //todo finish swap
+                safe_fread(a, recordSize, 1, f);
+                safe_fread(b, recordSize, 1, f);
+                sorted = false;
+            }
+        }
+    }
+
+    safe_free(b);
+    safe_free(a);
+    safe_fclose(f);
+}
 
 void sortSys(size_t recordCount, size_t recordSize, char *filePath);
 

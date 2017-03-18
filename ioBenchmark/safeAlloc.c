@@ -6,9 +6,18 @@
 #include "safeAlloc.h"
 
 
-void *safe_calloc(size_t __nmemb, size_t __size) {
-    void *allocated = calloc(__nmemb, __size);
-    if (allocated == NULL && __nmemb != 0 && __size != 0) {
+void *safe_malloc(size_t size) {
+    void *allocated = malloc(size);
+    if (allocated == NULL && size != 0) {
+        perror("Cannot allocate memory: ");
+        exit(EXIT_FAILURE);
+    }
+    return allocated;
+}
+
+void *safe_calloc(size_t count, size_t size) {
+    void *allocated = calloc(count, size);
+    if (allocated == NULL && count != 0 && size != 0) {
         perror("Cannot allocate memory: ");
         exit(EXIT_FAILURE);
     }
