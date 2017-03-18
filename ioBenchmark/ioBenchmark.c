@@ -5,7 +5,15 @@
 #include "ioBenchmark.h"
 
 
-static argp_option options[] =
+static const char *ACTION_GENERATE = "generate";
+static const char *ACTION_SHUFFLE = "shuffle";
+static const char *ACTION_SORT = "sort";
+
+static const char *PROVIDER_LIB = "lib";
+static const char *PROVIDER_SYS = "sys";
+
+
+static const argp_option options[] =
         {{"action",   'a', "action", /* flags */ 0, "Action to take, one of: generate, shuffle, sort"},
          {"provider", 'p', "action_provider",    0, "Provider of the action, one of: sys, lib"},
          {"count",    'c', "record_count",       0, "Count of the records in used file"},
@@ -14,13 +22,6 @@ static argp_option options[] =
          {0}};
 
 static const Arguments DEFAULT_ARGS = {GENERATE, LIBRARY, 100, 512, "ioBenchmarkRecords.bin"};
-
-static const char *ACTION_GENERATE = "generate";
-static const char *ACTION_SHUFFLE = "shuffle";
-static const char *ACTION_SORT = "sort";
-
-static const char *PROVIDER_LIB = "lib";
-static const char *PROVIDER_SYS = "sys";
 
 static error_t parser(int key, char *arg, struct argp_state *state) {
     Arguments *args = state->input;
@@ -83,6 +84,9 @@ static error_t parser(int key, char *arg, struct argp_state *state) {
     }
 }
 
+//todo resolve typedef symbol duplication >struct<
+static const struct argp argp = {options, parser};
+
 
 void generate(int recordCount, int recordSize, char *filePath);
 
@@ -96,29 +100,28 @@ void sortSys(int recordCount, int recordSize, char *filePath);
 
 
 int main(int argc, char **argv) {
-    argp argp = {options, parser};
     Arguments args;
     argp_parse(&argp, argc, argv, 0, NULL, &args);
 
-    switch (args.action) {
-        case GENERATE:
-            generate(args.recordCount, args.recordSize, args.filePath);
-            break;
-        case SHUFFLE:
-            if (LIBRARY == args.provider) {
-                shuffleLib(args.recordCount, args.recordSize, args.filePath);
-            } else {
-                shuffleSys(args.recordCount, args.recordSize, args.filePath);
-            }
-            break;
-        case SORT:
-            if (LIBRARY == args.provider) {
-                sortLib(args.recordCount, args.recordSize, args.filePath);
-            } else {
-                sortSys(args.recordCount, args.recordSize, args.filePath);
-            }
-            break;
-    }
+//    switch (args.action) {
+//        case GENERATE:
+//            generate(args.recordCount, args.recordSize, args.filePath);
+//            break;
+//        case SHUFFLE:
+//            if (LIBRARY == args.provider) {
+//                shuffleLib(args.recordCount, args.recordSize, args.filePath);
+//            } else {
+//                shuffleSys(args.recordCount, args.recordSize, args.filePath);
+//            }
+//            break;
+//        case SORT:
+//            if (LIBRARY == args.provider) {
+//                sortLib(args.recordCount, args.recordSize, args.filePath);
+//            } else {
+//                sortSys(args.recordCount, args.recordSize, args.filePath);
+//            }
+//            break;
+//    }
 
     return 0;
 }
