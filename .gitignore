@@ -6,3 +6,6 @@ cmake-build-debug
 
 # Prepared solutions
 packed
+
+# Generated data
+*.bin
