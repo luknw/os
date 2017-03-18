@@ -3,5 +3,5 @@ project(ioBenchmark)
 
 set(CMAKE_C_STANDARD 11)
 
-set(SOURCE_FILES ioBenchmark.c ioBenchmark.h)
+set(SOURCE_FILES ioBenchmark.c ioBenchmark.h safeFile.h safeFile.c)
 add_executable(ioBenchmark ${SOURCE_FILES})
