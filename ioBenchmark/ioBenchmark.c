@@ -120,7 +120,6 @@ void sortLib(size_t recordCount, size_t recordSize, char *filePath) {
     for (size_t i = recordCount - 1; i > 0 && !sorted; --i) {
         sorted = true;
         for (size_t j = 0; j < i; ++j) {
-            //todo safe fseek
             safe_fread(a, sizeof(unsigned char), 1, f);
             safe_fread(b, sizeof(unsigned char), 1, f);
 

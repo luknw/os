@@ -8,23 +8,32 @@
 #include "safeFile.h"
 
 
-FILE *safe_fopen(const char *__restrict __filename, const char *__restrict __modes) {
-    FILE *f = fopen(__filename, __modes);
+FILE *safe_fopen(const char *__restrict filename, const char *__restrict modes) {
+    FILE *f = fopen(filename, modes);
     if (f == NULL) {
         char *errorString = strerror(errno);
-        fprintf(stderr, "Error opening file: %s\n%s", __filename, errorString);
+        fprintf(stderr, "Error opening file: %s\n%s", filename, errorString);
         exit(EXIT_FAILURE);
     }
     return f;
 }
 
-int safe_fclose(FILE *__stream) {
-    int maybeEOF = fclose(__stream);
-    if (maybeEOF == EOF) {
+int safe_fclose(FILE *stream) {
+    int status = fclose(stream);
+    if (status == EOF) {
         perror("Error closing file: ");
         exit(EXIT_FAILURE);
     }
-    return maybeEOF;
+    return status;
+}
+
+int safe_fseek(FILE *stream, long int offset, int whence) {
+    int status = fseek(stream, offset, whence);
+    if (status == -1) {
+        perror("Error operating on file: ");
+        exit(EXIT_FAILURE);
+    }
+    return status;
 }
 
 size_t safe_fread(void *__restrict target, size_t size, size_t count, FILE *__restrict file) {

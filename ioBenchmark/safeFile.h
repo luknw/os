@@ -9,9 +9,11 @@
 #include <stdlib.h>
 
 
-FILE *safe_fopen(const char *__restrict __filename, const char *__restrict __modes);
+FILE *safe_fopen(const char *__restrict filename, const char *__restrict modes);
 
-int safe_fclose(FILE *__stream);
+int safe_fclose(FILE *stream);
+
+int safe_fseek(FILE *stream, long int offset, int whence);
 
 size_t safe_fread(void *__restrict target, size_t size, size_t count, FILE *__restrict file);
 
