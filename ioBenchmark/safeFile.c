@@ -36,6 +36,10 @@ int safe_fseek(FILE *stream, long int offset, int whence) {
     return status;
 }
 
+void safe_rewind(FILE *stream) {
+    rewind(stream);
+}
+
 size_t safe_fread(void *__restrict target, size_t size, size_t count, FILE *__restrict file) {
     size_t itemsRead = fread(target, size, count, file);
     if (itemsRead < count) {

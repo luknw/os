@@ -15,6 +15,8 @@ int safe_fclose(FILE *stream);
 
 int safe_fseek(FILE *stream, long int offset, int whence);
 
+void safe_rewind (FILE *stream);
+
 size_t safe_fread(void *__restrict target, size_t size, size_t count, FILE *__restrict file);
 
 size_t safe_fwrite(const void *__restrict source, size_t size, size_t count, FILE *__restrict file);
