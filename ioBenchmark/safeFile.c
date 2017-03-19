@@ -40,6 +40,24 @@ void safe_rewind(FILE *stream) {
     rewind(stream);
 }
 
+int safe_fgetpos(FILE *__restrict stream, fpos_t *__restrict position) {
+    int status = fgetpos(stream, position);
+    if (status == -1) {
+        perror("Error operating on file: ");
+        exit(EXIT_FAILURE);
+    }
+    return status;
+}
+
+int safe_fsetpos(FILE *stream, const fpos_t *position) {
+    int status = fsetpos(stream, position);
+    if (status == -1) {
+        perror("Error operating on file: ");
+        exit(EXIT_FAILURE);
+    }
+    return status;
+}
+
 size_t safe_fread(void *__restrict target, size_t size, size_t count, FILE *__restrict file) {
     size_t itemsRead = fread(target, size, count, file);
     if (itemsRead < count) {
