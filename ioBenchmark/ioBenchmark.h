@@ -36,13 +36,13 @@ struct Arguments {
 
 void generate(size_t recordCount, size_t recordSize, char *filePath);
 
-void shuffleLib(size_t recordCount, size_t recordSize, char *filePath);
+void libShuffle(size_t recordCount, size_t recordSize, char *filePath);
 
-void shuffleSys(size_t recordCount, size_t recordSize, char *filePath);
+void sysShuffle(size_t recordCount, size_t recordSize, char *filePath);
 
-void sortLib(size_t recordCount, size_t recordSize, char *filePath);
+void libSort(size_t recordCount, size_t recordSize, char *filePath);
 
-void sortSys(size_t recordCount, size_t recordSize, char *filePath);
+void sysSort(size_t recordCount, size_t recordSize, char *filePath);
 
 
 #endif //IOBENCHMARK_MAIN_H_H

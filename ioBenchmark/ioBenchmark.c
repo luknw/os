@@ -2,6 +2,7 @@
 #include <string.h>
 #include <argp.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "ioBenchmark.h"
 #include "safeAlloc.h"
@@ -19,11 +20,11 @@ static const char *RANDOM_SOURCE = "/dev/urandom";
 
 
 static const argp_option options[] =
-        {{"action",   'a', "action", /* flags */ 0, "Action to take, one of: generate, shuffle, sort"},
-         {"provider", 'p', "action_provider",    0, "Provider of the action, one of: sys, lib"},
-         {"count",    'c', "record_count",       0, "Count of the records in used file"},
-         {"size",     's', "record_size",        0, "Size of each record in used file"},
-         {"file",     'f', "target_file",        0, "File to use during benchmark"},
+        {{"action",   'a', "ACTION", /* flags */ 0, "Action to take, one of: generate, shuffle, sort"},
+         {"provider", 'p', "ACTION_PROVIDER",    0, "Provider of the action, one of: sys, lib"},
+         {"count",    'c', "RECORD_COUNT",       0, "Count of the records in used file"},
+         {"size",     's', "RECORD_SIZE",        0, "Size of each record in used file"},
+         {"file",     'f', "TARGET_FILE",        0, "File to use during benchmark"},
          {0}};
 
 static const Arguments DEFAULT_ARGS = {GENERATE, LIBRARY, 100, 512, "ioBenchmarkRecords.bin"};
@@ -106,11 +107,41 @@ void generate(size_t recordCount, size_t recordSize, char *filePath) {
     safe_free(records);
 }
 
-void shuffleLib(size_t recordCount, size_t recordSize, char *filePath);
+void libShuffle(size_t recordCount, size_t recordSize, char *filePath) {
+    srand((unsigned int) time(NULL));
 
-void shuffleSys(size_t recordCount, size_t recordSize, char *filePath);
+    FILE *f = safe_fopen(filePath, "r+b");
 
-void sortLib(size_t recordCount, size_t recordSize, char *filePath) {
+    unsigned char *a = safe_malloc(recordSize);
+    unsigned char *b = safe_malloc(recordSize);
+
+    for (int i = 0; i < recordCount - 1; ++i) {
+        int j = i + (int) ((rand() / (double) RAND_MAX) * (recordCount - 1 - i));
+        if (i == j) continue;
+
+        safe_fseek(f, recordSize * i, SEEK_SET);
+        safe_fread(a, recordSize, 1, f);
+
+        safe_fseek(f, recordSize * (j - i - 1), SEEK_CUR);
+        safe_fread(b, recordSize, 1, f);
+
+        safe_fseek(f, recordSize * (i - j - 1), SEEK_CUR);
+        safe_fwrite(b, recordSize, 1, f);
+        fflush(f);
+
+        safe_fseek(f, recordSize * (j - i - 1), SEEK_CUR);
+        safe_fwrite(a, recordSize, 1, f);
+        fflush(f);
+    }
+
+    safe_free(b);
+    safe_free(a);
+    safe_fclose(f);
+}
+
+void sysShuffle(size_t recordCount, size_t recordSize, char *filePath);
+
+void libSort(size_t recordCount, size_t recordSize, char *filePath) {
     if (recordCount < 2) return;
     size_t keySize = sizeof(unsigned char);
     if (keySize > recordSize) {
@@ -154,7 +185,7 @@ void sortLib(size_t recordCount, size_t recordSize, char *filePath) {
     safe_fclose(f);
 }
 
-void sortSys(size_t recordCount, size_t recordSize, char *filePath);
+void sysSort(size_t recordCount, size_t recordSize, char *filePath);
 
 
 int main(int argc, char **argv) {
@@ -165,18 +196,20 @@ int main(int argc, char **argv) {
         case GENERATE:
             generate(args.recordCount, args.recordSize, args.filePath);
             break;
-//        case SHUFFLE:
-//            if (LIBRARY == args.provider) {
-//                shuffleLib(args.recordCount, args.recordSize, args.filePath);
-//            } else {
-//                shuffleSys(args.recordCount, args.recordSize, args.filePath);
+        case SHUFFLE:
+            if (LIBRARY == args.provider) {
+                libShuffle(args.recordCount, args.recordSize, args.filePath);
+                break;
+            } //else {
+//                sysShuffle(args.recordCount, args.recordSize, args.filePath);
 //            }
 //            break;
         case SORT:
             if (LIBRARY == args.provider) {
-                sortLib(args.recordCount, args.recordSize, args.filePath);
+                libSort(args.recordCount, args.recordSize, args.filePath);
+                break;
             } //else {
-//                sortSys(args.recordCount, args.recordSize, args.filePath);
+//                sysSort(args.recordCount, args.recordSize, args.filePath);
 //            }
 //            break;
     }

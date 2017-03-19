@@ -9,7 +9,7 @@
 void *safe_malloc(size_t size) {
     void *allocated = malloc(size);
     if (allocated == NULL && size != 0) {
-        perror("Cannot allocate memory: ");
+        perror("Cannot allocate memory");
         exit(EXIT_FAILURE);
     }
     return allocated;
@@ -18,7 +18,7 @@ void *safe_malloc(size_t size) {
 void *safe_calloc(size_t count, size_t size) {
     void *allocated = calloc(count, size);
     if (allocated == NULL && count != 0 && size != 0) {
-        perror("Cannot allocate memory: ");
+        perror("Cannot allocate memory");
         exit(EXIT_FAILURE);
     }
     return allocated;

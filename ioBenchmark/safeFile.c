@@ -12,7 +12,7 @@ FILE *safe_fopen(const char *__restrict filename, const char *__restrict modes) 
     FILE *f = fopen(filename, modes);
     if (f == NULL) {
         char *errorString = strerror(errno);
-        fprintf(stderr, "Error opening file: %s\n%s", filename, errorString);
+        fprintf(stderr, "Error opening file: %s\n%s\n", filename, errorString);
         exit(EXIT_FAILURE);
     }
     return f;
@@ -21,7 +21,7 @@ FILE *safe_fopen(const char *__restrict filename, const char *__restrict modes) 
 int safe_fclose(FILE *stream) {
     int status = fclose(stream);
     if (status == EOF) {
-        perror("Error closing file: ");
+        perror("Error closing file");
         exit(EXIT_FAILURE);
     }
     return status;
@@ -30,7 +30,7 @@ int safe_fclose(FILE *stream) {
 int safe_fseek(FILE *stream, long int offset, int whence) {
     int status = fseek(stream, offset, whence);
     if (status == -1) {
-        perror("Error operating on file: ");
+        perror("Error operating on file");
         exit(EXIT_FAILURE);
     }
     return status;
@@ -43,7 +43,7 @@ void safe_rewind(FILE *stream) {
 int safe_fgetpos(FILE *__restrict stream, fpos_t *__restrict position) {
     int status = fgetpos(stream, position);
     if (status == -1) {
-        perror("Error operating on file: ");
+        perror("Error operating on file");
         exit(EXIT_FAILURE);
     }
     return status;
@@ -52,7 +52,7 @@ int safe_fgetpos(FILE *__restrict stream, fpos_t *__restrict position) {
 int safe_fsetpos(FILE *stream, const fpos_t *position) {
     int status = fsetpos(stream, position);
     if (status == -1) {
-        perror("Error operating on file: ");
+        perror("Error operating on file");
         exit(EXIT_FAILURE);
     }
     return status;
