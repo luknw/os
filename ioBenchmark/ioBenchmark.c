@@ -111,6 +111,13 @@ void shuffleLib(size_t recordCount, size_t recordSize, char *filePath);
 void shuffleSys(size_t recordCount, size_t recordSize, char *filePath);
 
 void sortLib(size_t recordCount, size_t recordSize, char *filePath) {
+    if (recordCount < 2) return;
+    size_t keySize = sizeof(unsigned char);
+    if (keySize > recordSize) {
+        fprintf(stderr, "Record size too small: %zu", recordSize);
+        exit(EXIT_FAILURE);
+    }
+
     FILE *f = safe_fopen(filePath, "r+b");
 
     unsigned char *a = safe_malloc(recordSize);
@@ -119,15 +126,25 @@ void sortLib(size_t recordCount, size_t recordSize, char *filePath) {
     bool sorted = false;
     for (size_t i = recordCount - 1; i > 0 && !sorted; --i) {
         sorted = true;
-        for (size_t j = 0; j < i; ++j) {
-            safe_fread(a, sizeof(unsigned char), 1, f);
-            safe_fread(b, sizeof(unsigned char), 1, f);
+        safe_rewind(f);
 
-            if (*a < *b) {
-                //todo finish swap
-                safe_fread(a, recordSize, 1, f);
-                safe_fread(b, recordSize, 1, f);
+        for (size_t j = 0; j < i; ++j) {
+            safe_fread(a, keySize, 1, f);
+            safe_fseek(f, recordSize - keySize, SEEK_CUR);
+
+            safe_fread(b, keySize, 1, f);
+            safe_fseek(f, -keySize, SEEK_CUR);
+
+            if (*a > *b) {
                 sorted = false;
+
+                safe_fread(b, recordSize, 1, f);
+                safe_fseek(f, -2 * recordSize, SEEK_CUR);
+                safe_fread(a, recordSize, 1, f);
+
+                safe_fwrite(a, recordSize, 1, f);
+                safe_fseek(f, -2 * recordSize, SEEK_CUR);
+                safe_fwrite(b, recordSize, 1, f);
             }
         }
     }
@@ -148,7 +165,6 @@ int main(int argc, char **argv) {
         case GENERATE:
             generate(args.recordCount, args.recordSize, args.filePath);
             break;
-    }
 //        case SHUFFLE:
 //            if (LIBRARY == args.provider) {
 //                shuffleLib(args.recordCount, args.recordSize, args.filePath);
@@ -156,13 +172,14 @@ int main(int argc, char **argv) {
 //                shuffleSys(args.recordCount, args.recordSize, args.filePath);
 //            }
 //            break;
-//        case SORT:
-//            if (LIBRARY == args.provider) {
-//                sortLib(args.recordCount, args.recordSize, args.filePath);
-//            } else {
+        case SORT:
+            if (LIBRARY == args.provider) {
+                sortLib(args.recordCount, args.recordSize, args.filePath);
+            } //else {
 //                sortSys(args.recordCount, args.recordSize, args.filePath);
 //            }
 //            break;
+    }
 
     return 0;
 }

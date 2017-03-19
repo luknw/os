@@ -61,7 +61,7 @@ int safe_fsetpos(FILE *stream, const fpos_t *position) {
 size_t safe_fread(void *__restrict target, size_t size, size_t count, FILE *__restrict file) {
     size_t itemsRead = fread(target, size, count, file);
     if (itemsRead < count) {
-        fprintf(stderr, "Error reading file");
+        fprintf(stderr, "Error reading file\n");
         exit(EXIT_FAILURE);
     }
     return itemsRead;
@@ -70,7 +70,7 @@ size_t safe_fread(void *__restrict target, size_t size, size_t count, FILE *__re
 size_t safe_fwrite(const void *__restrict source, size_t size, size_t count, FILE *__restrict file) {
     size_t itemsWritten = fwrite(source, size, count, file);
     if (itemsWritten < count) {
-        fprintf(stderr, "Error writing file");
+        fprintf(stderr, "Error writing file\n");
         exit(EXIT_FAILURE);
     }
     return itemsWritten;
