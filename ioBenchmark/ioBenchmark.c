@@ -138,7 +138,39 @@ void libShuffle(size_t recordCount, size_t recordSize, char *filePath) {
     safe_fclose(f);
 }
 
-void sysShuffle(size_t recordCount, size_t recordSize, char *filePath);
+void sysShuffle(size_t recordCount, size_t recordSize, char *filePath) {
+    srand((unsigned int) time(NULL));
+
+    int fd = open(filePath, O_RDWR);
+    if (fd == -1) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    unsigned char *a = safe_malloc(recordSize);
+    unsigned char *b = safe_malloc(recordSize);
+
+    for (int i = 0; i < recordCount - 1; ++i) {
+        int j = i + (int) ((rand() / (double) RAND_MAX) * (recordCount - 1 - i));
+        if (i == j) continue;
+
+        safe_lseek(fd, recordSize * i, SEEK_SET);
+        safe_read(fd, a, recordSize);
+
+        safe_lseek(fd, recordSize * (j - i - 1), SEEK_CUR);
+        safe_read(fd, b, recordSize);
+
+        safe_lseek(fd, recordSize * (i - j - 1), SEEK_CUR);
+        safe_write(fd, b, recordSize);
+
+        safe_lseek(fd, recordSize * (j - i - 1), SEEK_CUR);
+        safe_write(fd, a, recordSize);
+    }
+
+    safe_free(b);
+    safe_free(a);
+    safe_close(fd);
+}
 
 void libSort(size_t recordCount, size_t recordSize, char *filePath) {
     if (recordCount < 2) return;
@@ -244,11 +276,10 @@ int main(int argc, char **argv) {
         case SHUFFLE:
             if (LIBRARY == args.provider) {
                 libShuffle(args.recordCount, args.recordSize, args.filePath);
-                break;
-            } //else {
-//                sysShuffle(args.recordCount, args.recordSize, args.filePath);
-//            }
-//            break;
+            } else {
+                sysShuffle(args.recordCount, args.recordSize, args.filePath);
+            }
+            break;
         case SORT:
             if (LIBRARY == args.provider) {
                 libSort(args.recordCount, args.recordSize, args.filePath);
