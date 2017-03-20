@@ -58,6 +58,7 @@ static error_t parser(int key, char *arg, struct argp_state *state) {
             return 0;
         case 'f':
             args->filePath = arg;
+            return 0;
         case ARGP_KEY_INIT:
             args->action = (Action) -1;
             args->provider = (ActionProvider) -1;
