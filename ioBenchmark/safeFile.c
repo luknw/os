@@ -4,6 +4,8 @@
 
 #include <string.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "safeFile.h"
 
@@ -74,4 +76,49 @@ size_t safe_fwrite(const void *__restrict source, size_t size, size_t count, FIL
         exit(EXIT_FAILURE);
     }
     return itemsWritten;
+}
+
+
+int safe_close(int fd) {
+    int status = close(fd);
+    if (status == -1) {
+        perror("Error closing file");
+        exit(EXIT_FAILURE);
+    }
+    return status;
+}
+
+__off_t safe_lseek(int fd, __off_t offset, int whence) {
+    __off_t offsetResult = lseek(fd, offset, whence);
+    if (offsetResult == -1) {
+        perror("Error operating on file");
+        exit(EXIT_FAILURE);
+    }
+    return offsetResult;
+}
+
+ssize_t safe_read(int fd, void *buf, size_t count) {
+    ssize_t readCount = read(fd, buf, count);
+    if (readCount == -1) {
+        perror("Error reading file");
+        exit(EXIT_FAILURE);
+    } else if (readCount == 0) {
+        fprintf(stderr, "Reached end of file\n");
+    } else if (readCount < count) {
+        fprintf(stderr, "Read less bytes than specified. Expected: %zu Actual: %zi\n", count, readCount);
+    }
+    return readCount;
+}
+
+ssize_t safe_write(int fd, const void *buf, size_t count) {
+    ssize_t writtenCount = write(fd, buf, count);
+    if (writtenCount == -1) {
+        perror("Error writing file");
+        exit(EXIT_FAILURE);
+    } else if (writtenCount == 0) {
+        fprintf(stderr, "Possible writing error\n");
+    } else if (writtenCount < count) {
+        fprintf(stderr, "Written less bytes than specified. Expected: %zu Actual: %zi\n", count, writtenCount);
+    }
+    return writtenCount;
 }
