@@ -1,0 +1,162 @@
+Generalnie widać, że sortowanie z użyciem funkcji systemowych jest ciut szybsze niż z użyciem funkcji bibliotecznych.
+Dodatkowo, dla dużych rozmiarów rekordów permutacja biblioteczna jets ciut szybsza od systemowej.
+
+libSort -s 4 -c 1000
+real	0m0.949s
+user	0m0.188s
+sys	0m0.752s
+
+sysSort -s 4 -c 1000
+real	0m0.978s
+user	0m0.096s
+sys	0m0.880s
+
+libSort -s 4 -c 5000
+real	0m22.829s
+user	0m5.124s
+sys	0m17.632s
+
+sysSort -s 4 -c 5000
+real	0m22.119s
+user	0m2.012s
+sys	0m20.096s
+
+libSort -s 512 -c 1000
+real	0m1.000s
+user	0m0.256s
+sys	0m0.740s
+
+sysSort -s 512 -c 1000
+real	0m1.099s
+user	0m0.104s
+sys	0m0.996s
+
+libSort -s 512 -c 5000
+real	0m27.039s
+user	0m6.284s
+sys	0m20.636s
+
+sysSort -s 512 -c 5000
+real	0m26.352s
+user	0m2.128s
+sys	0m24.188s
+
+libSort -s 4096 -c 1000
+real	0m1.661s
+user	0m0.332s
+sys	0m1.328s
+
+sysSort -s 4096 -c 1000
+real	0m1.520s
+user	0m0.072s
+sys	0m1.448s
+
+libSort -s 4096 -c 5000
+real	0m41.393s
+user	0m7.016s
+sys	0m34.308s
+
+sysSort -s 4096 -c 5000
+real	0m39.273s
+user	0m2.236s
+sys	0m37.020s
+
+libSort -s 8192 -c 1000
+real	0m2.447s
+user	0m0.332s
+sys	0m2.112s
+
+sysSort -s 8192 -c 1000
+real	0m3.017s
+user	0m0.104s
+sys	0m2.908s
+
+libSort -s 8192 -c 5000
+real	1m3.180s
+user	0m7.588s
+sys	0m55.520s
+
+sysSort -s 8192 -c 5000
+real	1m0.496s
+user	0m2.460s
+sys	0m57.884s
+
+libShuffle -s 4 -c 1000
+real	0m0.018s
+user	0m0.000s
+sys	0m0.016s
+
+sysShuffle -s 4 -c 1000
+real	0m0.014s
+user	0m0.000s
+sys	0m0.012s
+
+libShuffle -s 4 -c 5000
+real	0m0.074s
+user	0m0.008s
+sys	0m0.064s
+
+sysShuffle -s 4 -c 5000
+real	0m0.062s
+user	0m0.004s
+sys	0m0.052s
+
+libShuffle -s 512 -c 1000
+real	0m0.030s
+user	0m0.000s
+sys	0m0.028s
+
+sysShuffle -s 512 -c 1000
+real	0m0.018s
+user	0m0.004s
+sys	0m0.016s
+
+libShuffle -s 512 -c 5000
+real	0m0.064s
+user	0m0.016s
+sys	0m0.044s
+
+sysShuffle -s 512 -c 5000
+real	0m0.063s
+user	0m0.008s
+sys	0m0.052s
+
+libShuffle -s 4096 -c 1000
+real	0m0.022s
+user	0m0.008s
+sys	0m0.016s
+
+sysShuffle -s 4096 -c 1000
+real	0m0.026s
+user	0m0.004s
+sys	0m0.024s
+
+libShuffle -s 4096 -c 5000
+real	0m0.079s
+user	0m0.012s
+sys	0m0.064s
+
+sysShuffle -s 4096 -c 5000
+real	0m0.084s
+user	0m0.000s
+sys	0m0.080s
+
+libShuffle -s 8192 -c 1000
+real	0m0.019s
+user	0m0.004s
+sys	0m0.012s
+
+sysShuffle -s 8192 -c 1000
+real	0m0.034s
+user	0m0.008s
+sys	0m0.028s
+
+libShuffle -s 8192 -c 5000
+real	0m0.114s
+user	0m0.024s
+sys	0m0.064s
+
+sysShuffle -s 8192 -c 5000
+real	0m0.114s
+user	0m0.004s
+sys	0m0.112s
