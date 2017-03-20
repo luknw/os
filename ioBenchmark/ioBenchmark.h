@@ -9,21 +9,20 @@ typedef struct argp argp;
 typedef struct argp_option argp_option;
 typedef struct argp_state argp_state;
 
-typedef enum Action Action;
-typedef enum ActionProvider ActionProvider;
 typedef struct Arguments Arguments;
 
 
-enum Action {
+typedef enum Action {
     GENERATE,
     SHUFFLE,
     SORT
-};
+} Action;
 
-enum ActionProvider {
+typedef enum ActionProvider {
     LIBRARY,
     SYSTEM
-};
+} ActionProvider;
+
 
 struct Arguments {
     Action action;

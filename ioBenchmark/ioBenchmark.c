@@ -6,8 +6,8 @@
 #include <fcntl.h>
 
 #include "ioBenchmark.h"
-#include "safeAlloc.h"
-#include "safeFile.h"
+#include "libsafealloc/safeAlloc.h"
+#include "libsafefile/safeFile.h"
 
 
 static const char *ACTION_GENERATE = "generate";
