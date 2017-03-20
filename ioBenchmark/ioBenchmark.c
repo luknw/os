@@ -3,6 +3,7 @@
 #include <argp.h>
 #include <stdbool.h>
 #include <time.h>
+#include <fcntl.h>
 
 #include "ioBenchmark.h"
 #include "safeAlloc.h"
@@ -127,11 +128,9 @@ void libShuffle(size_t recordCount, size_t recordSize, char *filePath) {
 
         safe_fseek(f, recordSize * (i - j - 1), SEEK_CUR);
         safe_fwrite(b, recordSize, 1, f);
-        fflush(f);
 
         safe_fseek(f, recordSize * (j - i - 1), SEEK_CUR);
         safe_fwrite(a, recordSize, 1, f);
-        fflush(f);
     }
 
     safe_free(b);
@@ -185,7 +184,53 @@ void libSort(size_t recordCount, size_t recordSize, char *filePath) {
     safe_fclose(f);
 }
 
-void sysSort(size_t recordCount, size_t recordSize, char *filePath);
+void sysSort(size_t recordCount, size_t recordSize, char *filePath) {
+    if (recordCount < 2) return;
+    size_t keySize = sizeof(unsigned char);
+    if (keySize > recordSize) {
+        fprintf(stderr, "Record size too small: %zu", recordSize);
+        exit(EXIT_FAILURE);
+    }
+
+    int fd = open(filePath, O_RDWR);
+    if (fd == -1) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    unsigned char *a = safe_malloc(recordSize);
+    unsigned char *b = safe_malloc(recordSize);
+
+    bool sorted = false;
+    for (size_t i = recordCount - 1; i > 0 && !sorted; --i) {
+        sorted = true;
+        safe_lseek(fd, 0, SEEK_SET);
+
+        for (size_t j = 0; j < i; ++j) {
+            safe_read(fd, a, keySize);
+            safe_lseek(fd, recordSize - keySize, SEEK_CUR);
+
+            safe_read(fd, b, keySize);
+            safe_lseek(fd, -keySize, SEEK_CUR);
+
+            if (*a > *b) {
+                sorted = false;
+
+                safe_read(fd, b, recordSize);
+                safe_lseek(fd, -2 * recordSize, SEEK_CUR);
+                safe_read(fd, a, recordSize);
+
+                safe_write(fd, a, recordSize);
+                safe_lseek(fd, -2 * recordSize, SEEK_CUR);
+                safe_write(fd, b, recordSize);
+            }
+        }
+    }
+
+    safe_free(b);
+    safe_free(a);
+    safe_close(fd);
+}
 
 
 int main(int argc, char **argv) {
@@ -207,11 +252,10 @@ int main(int argc, char **argv) {
         case SORT:
             if (LIBRARY == args.provider) {
                 libSort(args.recordCount, args.recordSize, args.filePath);
-                break;
-            } //else {
-//                sysSort(args.recordCount, args.recordSize, args.filePath);
-//            }
-//            break;
+            } else {
+                sysSort(args.recordCount, args.recordSize, args.filePath);
+            }
+            break;
     }
 
     return 0;
