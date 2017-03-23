@@ -26,4 +26,21 @@ struct Action {
 };
 
 
+void nonBlockingReadLock();
+
+void blockingReadLock();
+
+void nonBlockingWriteLock();
+
+void blockingWriteLock();
+
+void freeLock();
+
+void readChar();
+
+void writeChar();
+
+void listLocks(char *filePath);
+
+
 #endif //FLOCKLOCK_MAIN_H
