@@ -175,10 +175,10 @@ void fileInfo(char *rootDirectory, long maxSize) {
 int main(int argc, char **argv) {
     if (argc < 2) {
         printf("USAGE: fileInfo DIRECTORY [MAX_FILE_SIZE]\n"
-                       "\tPrints info about files of size not larger than MAX_FILE_SIZE,\n"
-                       "\tthat reside in DIRECTORY or any of its direct or indirect subdirectories.\n"
-                       "\tConsiders only files and directories, that the invoking user can access."
-                       "\tIf MAX_FILE_SIZE is not provided, there is no file size limit.\n");
+                       "Prints info about files of size not larger than MAX_FILE_SIZE,\n"
+                       "that reside in DIRECTORY or any of its direct or indirect subdirectories.\n"
+                       "Considers only files and directories, that the invoking user can access.\n"
+                       "If MAX_FILE_SIZE is not provided, there is no file size limit.\n");
         return 0;
     }
 
