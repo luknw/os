@@ -36,7 +36,7 @@ ExecCmd parseExecCmd(char *cmdLine) {
     cmd.cmd = strtok(cmdLine, WHITESPACE);
 
     size_t argvLen = INITIAL_ARGV_LEN;
-    cmd.argv = calloc(argvLen, sizeof(char *));
+    cmd.argv = safe_calloc(argvLen, sizeof(char *));
     cmd.argv[0] = cmd.cmd;
 
     char *token;
@@ -99,7 +99,7 @@ void performExecCmd(ExecCmd cmd) {
                 "User time:", rusage.ru_utime.tv_sec, ".", rusage.ru_utime.tv_usec,
                 "System time:", rusage.ru_stime.tv_sec, ".", rusage.ru_stime.tv_usec);
 
-        free(cmd.argv);
+        safe_free(cmd.argv);
     } else {
         perror("Error while forking");
         exit(EXIT_FAILURE);
