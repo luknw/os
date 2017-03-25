@@ -12,3 +12,5 @@ set(SOURCE_FILES main.c
 add_executable(scripe ${SOURCE_FILES})
 
 add_executable(environTester environTester.c)
+
+add_executable(timeLimitTester timeLimitTester.c)
