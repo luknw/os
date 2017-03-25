@@ -1,0 +1,12 @@
+
+
+#TRAP
+./cmake-build-debug/environTester TRAP
+#  TRAP 123 09J
+./cmake-build-debug/environTester TRAP
+
+#
+
+./cmake-build-debug/environTester PATH
+#PATH
+./cmake-build-debug/environTester PATH

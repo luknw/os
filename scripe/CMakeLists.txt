@@ -5,5 +5,10 @@ set(CMAKE_C_STANDARD 11)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic")
 
-set(SOURCE_FILES main.c)
+set(SOURCE_FILES main.c
+        libsafe/safe.h
+        libsafe/safeAlloc.c libsafe/safeAlloc.h
+        libsafe/safeIO.c libsafe/safeIO.h)
 add_executable(scripe ${SOURCE_FILES})
+
+add_executable(environTester environTester.c)
