@@ -9,3 +9,6 @@ packed
 
 # Generated data
 *.bin
+
+# Sripet files
+*.scp
