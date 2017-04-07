@@ -60,6 +60,7 @@ ExecCmd parseExecCmd(char *cmdLine) {
 
         cmd.argv[tokenCount++] = token;
     }
+    cmd.argv[tokenCount] = NULL;
 
     return cmd;
 }
