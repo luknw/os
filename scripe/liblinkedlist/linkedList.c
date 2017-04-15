@@ -26,7 +26,7 @@ static void LinkedList_insertBefore(LinkedList *list, void *object, LinkedListNo
     insertedNext->prev->next = inserted;
     insertedNext->prev = inserted;
 
-    (list->len)++;
+    (list->size)++;
 }
 
 void LinkedList_addFront(LinkedList *list, void *object) {
@@ -42,7 +42,7 @@ static void *LinkedList_removeNode(LinkedList *list, LinkedListNode *removed) {
     if (removed->prev != NULL) removed->prev->next = removed->next;
     if (removed->next != NULL) removed->next->prev = removed->prev;
 
-    (list->len)--;
+    (list->size)--;
 
     void *removedObject = removed->object;
     LinkedListNode_delete(removed);
@@ -51,20 +51,28 @@ static void *LinkedList_removeNode(LinkedList *list, LinkedListNode *removed) {
 }
 
 void *LinkedList_removeFront(LinkedList *list) {
-    if (list->len <= 0) return NULL;
+    if (LinkedList_isEmpty(list)) return NULL;
 
     return LinkedList_removeNode(list, list->front->next);
 }
 
 void *LinkedList_removeBack(LinkedList *list) {
-    if (list->len <= 0) return NULL;
+    if (LinkedList_isEmpty(list)) return NULL;
 
     return LinkedList_removeNode(list, list->back->prev);
 }
 
+void *LinkedList_remove(LinkedList *list, void *object) {
+    for (LinkedListNode *i = list->front->next; i != list->back; i = i->next) {
+        if (i->object == object) return LinkedList_removeNode(list, i);
+    }
+
+    return NULL;
+}
+
 
 bool LinkedList_isEmpty(LinkedList *list) {
-    return list->len == 0;
+    return list->size == 0;
 }
 
 
@@ -75,13 +83,13 @@ LinkedList *LinkedList_new() {
     list->back = LinkedListNode_new(NULL, list->front, NULL);
     list->front->next = list->back;
 
-    list->len = 0;
+    list->size = 0;
 
     return list;
 }
 
 void LinkedList_delete(LinkedList *list) {
-    while (list->len > 0) LinkedList_removeBack(list);
+    while (!LinkedList_isEmpty(list)) LinkedList_removeBack(list);
 
     safe_free(list->back);
     safe_free(list->front);

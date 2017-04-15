@@ -25,19 +25,28 @@ struct LinkedList {
     LinkedListNode *front;
     LinkedListNode *back;
 
-    size_t len;
+    size_t size;
 };
+
+
+void LinkedList_addFront(LinkedList *list, void *object);
+
+void LinkedList_addBack(LinkedList *list, void *object);
+
+
+void *LinkedList_removeFront(LinkedList *list);
+
+void *LinkedList_removeBack(LinkedList *list);
+
+void *LinkedList_remove(LinkedList *list, void *object);
+
+
+bool LinkedList_isEmpty(LinkedList *list);
 
 
 LinkedList *LinkedList_new();
 
-void LinkedList_delete(LinkedList *q);
-
-bool LinkedList_add(LinkedList *q, void *object);
-
-void *LinkedList_remove(void *object);
-
-bool LinkedList_isEmpty(LinkedList *q);
+void LinkedList_delete(LinkedList *list);
 
 
 #endif //LINKEDLIST_H

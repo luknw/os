@@ -8,7 +8,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic")
 set(SOURCE_FILES main.c
         libsafe/safe.h
         libsafe/safeAlloc.c libsafe/safeAlloc.h
-        libsafe/safeIO.c libsafe/safeIO.h liblinkedlist/linkedList.c liblinkedlist/linkedList.h)
+        libsafe/safeIO.c libsafe/safeIO.h liblinkedlist/linkedList.c liblinkedlist/linkedList.h libhashset/libhashset.c libhashset/libhashset.h)
 add_executable(scripe ${SOURCE_FILES})
 
 add_executable(environTester environTester.c)
