@@ -149,3 +149,13 @@ FILE *safe_fmemopen(void *pMem, size_t len, const char *modes) {
     }
     return sMem;
 }
+
+
+int safe_dup2(int oldFd, int newFd) {
+    int duplicate = dup2(oldFd, newFd);
+    if (duplicate == -1) {
+        perror("Error duplicating file descriptor");
+        exit(EXIT_FAILURE);
+    }
+    return duplicate;
+}

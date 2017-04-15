@@ -51,7 +51,10 @@ ssize_t safe_getline(char **__restrict linePtr, ssize_t *__restrict n, FILE *__r
 ssize_t safe_getline_content(char **__restrict linePtr, ssize_t *__restrict n, FILE *__restrict stream);
 
 
-FILE *safe_fmemopen (void *pMem, size_t len, const char *modes);
+FILE *safe_fmemopen(void *pMem, size_t len, const char *modes);
+
+
+int safe_dup2(int oldFd, int newFd);
 
 
 #endif //SAFE_IO_H
