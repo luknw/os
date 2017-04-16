@@ -5,11 +5,38 @@
 #include "hashmap.h"
 
 
-HashMap *HashMap_new(size_t bucketCount, size_t(*hashcode)(void *key)) {
+static typedef struct HashMapEntry HashMapEntry;
+
+static struct HashMapEntry {
+    void *key;
+    void *value;
+};
+
+static HashMapEntry *HashMapEntry_new(void *key, void *value) {
+    HashMapEntry *entry = safe_malloc(sizeof(HashMapEntry));
+
+    entry->key = key;
+    entry->value = value;
+
+    return entry;
+}
+
+static void HashMapEntry_delete(HashMapEntry *entry) {
+    safe_free(entry);
+}
+
+
+static size_t HashMap_hash(HashMap *map, void *key) {
+    size_t hash = map->hashcode(key);
+    hash ^= hash >> (sizeof(size_t) * 8 / 2);
+    return (map->bucketCount - 1) & hash;
+}
+
+HashMap *HashMap_new(size_t(*hashcode)(void *key)) {
     HashMap *map = safe_malloc(sizeof(HashMap));
 
-    map->bucketCount = bucketCount;
-    map->buckets = safe_calloc(bucketCount, sizeof(LinkedList *));
+    map->bucketCount = HashMap_DEFAULT_BUCKET_COUNT;
+    map->buckets = safe_calloc(map->bucketCount, sizeof(LinkedList *));
 
     map->hashcode = hashcode;
 
@@ -19,47 +46,77 @@ HashMap *HashMap_new(size_t bucketCount, size_t(*hashcode)(void *key)) {
 }
 
 void HashMap_delete(HashMap *map) {
-    for (int i = 0; i < map->bucketCount; ++i) {
-        if (map->buckets[i] != NULL) LinkedList_delete(map->buckets[i]);
+    for (LinkedList *bucket = map->buckets[0]; map->bucketCount > 0; map->bucketCount--) {
+        if (bucket == NULL) continue;
+
+        while (!LinkedList_isEmpty(bucket)) {
+            HashMapEntry_delete(LinkedList_removeBack(bucket));
+        }
+        LinkedList_delete(bucket);
     }
 
     safe_free(map);
 }
 
 void HashMap_add(HashMap *map, void *key, void *value) {
-    size_t hash = map->hashcode(key);
+    size_t hash = HashMap_hash(map, key);
 
     if (map->buckets[hash] == NULL) map->buckets[hash] = LinkedList_new();
 
-    LinkedList_addFront(map->buckets[hash], value);
+    LinkedList_addFront(map->buckets[hash], HashMapEntry_new(key, value));
 
     (map->size)++;
 }
 
-void *HashMap_remove(HashMap *map, void *key, void *value) {
-    size_t hash = map->hashcode(key);
+/// Convenient encapsulation breaking solution :p
+static HashMapEntry *HashMap_findEntryInBucket(LinkedList *bucket, void *key) {
+    for (LinkedListNode *node = bucket->front->next; node != bucket->back; node = node->next) {
+        HashMapEntry *entry = node->object;
+        if (entry->key == key) return entry;
+    }
+
+    return NULL;
+}
+
+void *HashMap_remove(HashMap *map, void *key) {
+    size_t hash = HashMap_hash(map, key);
     LinkedList *bucket = map->buckets[hash];
 
     if (bucket == NULL) return NULL;
 
-    size_t prevBucketSize = bucket->size;
-    void *removed = LinkedList_remove(bucket, value);
+    HashMapEntry *entry = HashMap_findEntryInBucket(bucket, key);
+    HashMapEntry *removed = LinkedList_remove(bucket, entry);
 
-    if (bucket->size == prevBucketSize) return NULL;
+    if (removed == NULL) return NULL;
+
+    void *removedValue = removed->value;
+    HashMapEntry_delete(removed);
 
     (map->size)--;
 
-    return removed;
+    return removedValue;
 }
 
-bool HashMap_contains(HashMap *map, void *key, void *value) {
-    void *newBucketFront = HashMap_remove(map, key, value);
+bool HashMap_contains(HashMap *map, void *key) {
+    size_t initialMapSize = map->size;
 
-    if (newBucketFront != value) return false;
+    void *newBucketFront = HashMap_remove(map, key);
+
+    if (map->size == initialMapSize) return false;
 
     HashMap_add(map, key, newBucketFront);
 
     return true;
+}
+
+void *HashMap_get(HashMap *map, void *key) {
+    size_t initialMapSize = map->size;
+
+    void *newBucketFront = HashMap_remove(map, key);
+
+    if (map->size != initialMapSize) HashMap_add(map, key, newBucketFront);
+
+    return newBucketFront;
 }
 
 bool HashMap_isEmpty(HashMap *map) {
