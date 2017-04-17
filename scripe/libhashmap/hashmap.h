@@ -24,7 +24,7 @@ struct HashMap {
 
 
 /// Must be power of 2
-static const size_t HashMap_DEFAULT_BUCKET_COUNT = 256;
+static const size_t HashMap_DEFAULT_BUCKET_COUNT = 32;
 
 
 HashMap *HashMap_new(size_t(*hashcode)(void *key));

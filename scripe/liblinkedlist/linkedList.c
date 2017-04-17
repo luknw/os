@@ -96,6 +96,3 @@ void LinkedList_delete(LinkedList *list) {
 
     safe_free(list);
 }
-
-
-#endif //LINKEDLIST_H

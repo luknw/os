@@ -133,7 +133,7 @@ ssize_t safe_getline(char **__restrict linePtr, ssize_t *__restrict n, FILE *__r
 
 ssize_t safe_getline_content(char **__restrict linePtr, ssize_t *__restrict n, FILE *__restrict stream) {
     *n = safe_getline(linePtr, n, stream);
-    if (*n > 0) {
+    if (*n > 0 && (*linePtr)[*n - 1] == '\n') {
         (*n)--;
         (*linePtr)[*n] = '\0';
     }

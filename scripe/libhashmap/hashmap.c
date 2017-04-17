@@ -5,7 +5,7 @@
 #include "hashmap.h"
 
 
-static typedef struct HashMapEntry HashMapEntry;
+typedef struct HashMapEntry HashMapEntry;
 
 static struct HashMapEntry {
     void *key;
@@ -46,13 +46,13 @@ HashMap *HashMap_new(size_t(*hashcode)(void *key)) {
 }
 
 void HashMap_delete(HashMap *map) {
-    for (LinkedList *bucket = map->buckets[0]; map->bucketCount > 0; map->bucketCount--) {
-        if (bucket == NULL) continue;
+    for (LinkedList **bucket = map->buckets; map->bucketCount-- > 0; ++bucket) {
+        if (*bucket == NULL) continue;
 
-        while (!LinkedList_isEmpty(bucket)) {
-            HashMapEntry_delete(LinkedList_removeBack(bucket));
+        while (!LinkedList_isEmpty(*bucket)) {
+            HashMapEntry_delete(LinkedList_removeBack(*bucket));
         }
-        LinkedList_delete(bucket);
+        LinkedList_delete(*bucket);
     }
 
     safe_free(map);

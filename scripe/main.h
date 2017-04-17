@@ -20,7 +20,18 @@ typedef struct EnvCmd {
 typedef struct ExecCmd {
     char *cmd;
     char **argv;
+    pid_t pid;
 } ExecCmd;
+
+typedef struct Pipeline {
+    ExecCmd *cmds;
+    int cmdCount;
+} Pipeline;
+
+typedef struct Pipe {
+    int sink;
+    int tap;
+} Pipe;
 
 
 #endif //SCRIPE_MAIN_H
