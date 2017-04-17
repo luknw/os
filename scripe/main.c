@@ -12,13 +12,17 @@
 #include "libhashmap/hashmap.h"
 
 
-static const char *USAGE = "scripe SCRIPET_PATH\n"
-        "\tInterprets the scripet at SCRIPET_PATH.\n";
+static const char *USAGE = "scripe [SCRIPET_PATH]\n"
+        "\tInterprets the scripet at SCRIPET_PATH if it is provided.\n"
+        "\tIf SCRIPET_PATH is \"-\" or not present, enters interactive mode,\n"
+        "\tinterpreting console input.";
 
 static const size_t INITIAL_CMD_ARGV_LEN = 4;
 static const size_t INITIAL_CMD_PIPELINE_LEN = 4;
 static const char *WHITESPACE = " \t\n";
 static const char *PIPELINE_DELIMITERS = "|";
+
+static const char *PS = "$ ";
 
 
 static ssize_t lineBufferSize = 0;
@@ -239,18 +243,18 @@ void waitForPipeline(HashMap *cmdsByPid) {
         pid_t pid = wait3(&status, 0, &rusage);
         ExecCmd *cmd = HashMap_remove(cmdsByPid, fitVoidPointer(&pid, sizeof(pid)));
 
-        fprintf(stderr, "%s%s%2s%d%-5s", cmd->cmd, " terminated", "(", WEXITSTATUS(status), ")");
+//        fprintf(stderr, "%s%s%2s%d%-5s", cmd->cmd, " terminated", "(", WEXITSTATUS(status), ")");
 
         if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
             fprintf(stderr, "\nError executing command at line %u\n", lineCount);
             exit(WEXITSTATUS(status));
         }
 
-        fprintf(stderr, "%-8s%-10d%20s%9li%-10s%-15s%4li%s%li%-5s%-15s%4li%s%li%-5s\n",
-                "PID:", pid,
-                "Max resident memory:", rusage.ru_maxrss, " kB",
-                "User time:", rusage.ru_utime.tv_sec, ".", rusage.ru_utime.tv_usec, " s",
-                "System time:", rusage.ru_stime.tv_sec, ".", rusage.ru_stime.tv_usec, " s");
+//        fprintf(stderr, "%-8s%-10d%20s%9li%-10s%-15s%4li%s%li%-5s%-15s%4li%s%li%-5s\n",
+//                "PID:", pid,
+//                "Max resident memory:", rusage.ru_maxrss, " kB",
+//                "User time:", rusage.ru_utime.tv_sec, ".", rusage.ru_utime.tv_usec, " s",
+//                "System time:", rusage.ru_stime.tv_sec, ".", rusage.ru_stime.tv_usec, " s");
 
         cmd->pid = 1;
         safe_free(cmd->argv);
@@ -276,17 +280,20 @@ void interpretLine(char *line, ssize_t lineLen) {
     }
 }
 
-void interpret(char *filePath) {
-    FILE *sScript = safe_fopen(filePath, "r");
-
-    while (safe_getline_content(&lineBuffer, &lineBufferSize, sScript) != EOF) {
+void interpret(FILE *inputStream) {
+    if (inputStream == stdin) printf("%s", PS);
+    while (safe_getline_content(&lineBuffer, &lineBufferSize, inputStream) != EOF) {
         interpretLine(lineBuffer, lineBufferSize);
         lineCount++;
+        if (inputStream == stdin) printf("%s", PS);
     }
-
-    safe_fclose(sScript);
 }
 
+
+FILE *findInputStream(int argc, char **argv) {
+    if (argc < 2 || strcmp(argv[1], "-") == 0) return stdin;
+    return safe_fopen(argv[1], "r");
+}
 
 void findResourceLimits(int argc, char **argv) {
     if (argc >= 4) {
@@ -311,8 +318,11 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    FILE *inputStream = findInputStream(argc, argv);
     findResourceLimits(argc, argv);
-    interpret(argv[1]);
 
+    interpret(inputStream);
+
+    safe_fclose(inputStream);
     return 0;
 }
