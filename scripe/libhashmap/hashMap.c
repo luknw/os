@@ -2,12 +2,12 @@
 // Created by luknw on 4/15/17.
 //
 
-#include "hashmap.h"
+#include "hashMap.h"
 
 
 typedef struct HashMapEntry HashMapEntry;
 
-static struct HashMapEntry {
+struct HashMapEntry {
     void *key;
     void *value;
 };
@@ -28,7 +28,7 @@ static void HashMapEntry_delete(HashMapEntry *entry) {
 
 static size_t HashMap_hash(HashMap *map, void *key) {
     size_t hash = map->hashcode(key);
-    hash ^= hash >> (sizeof(size_t) * 8 / 2);
+    hash ^= hash >> (sizeof(size_t) * CHAR_BIT / 2);
     return (map->bucketCount - 1) & hash;
 }
 
@@ -85,9 +85,9 @@ void *HashMap_remove(HashMap *map, void *key) {
     if (bucket == NULL) return NULL;
 
     HashMapEntry *entry = HashMap_findEntryInBucket(bucket, key);
-    HashMapEntry *removed = LinkedList_remove(bucket, entry);
+    if(entry == NULL) return NULL;
 
-    if (removed == NULL) return NULL;
+    HashMapEntry *removed = LinkedList_remove(bucket, entry);
 
     void *removedValue = removed->value;
     HashMapEntry_delete(removed);

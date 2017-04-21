@@ -2,10 +2,11 @@
 // Created by luknw on 4/15/17.
 //
 
-#ifndef LIBHASHMAP_H
-#define LIBHASHMAP_H
+#ifndef HASHMAP_H
+#define HASHMAP_H
 
 #include <stdlib.h>
+#include <limits.h>
 
 #include "../libsafe/safe.h"
 #include "../liblinkedlist/linkedList.h"
@@ -42,4 +43,4 @@ void *HashMap_get(HashMap *map, void *key);
 bool HashMap_isEmpty(HashMap *map);
 
 
-#endif //LIBHASHMAP_H
+#endif //HASHMAP_H

@@ -6,16 +6,21 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <limits.h>
+#include <stdint.h>
 
 #include "main.h"
 #include "libsafe/safe.h"
-#include "libhashmap/hashmap.h"
+#include "libhashmap/hashMap.h"
 
 
-static const char *USAGE = "scripe [SCRIPET_PATH]\n"
-        "\tInterprets the scripet at SCRIPET_PATH if it is provided.\n"
-        "\tIf SCRIPET_PATH is \"-\" or not present, enters interactive mode,\n"
-        "\tinterpreting console input.";
+/*
+ * USAGE: scripe [SCRIPET_PATH]
+ *        Interprets the scripet at SCRIPET_PATH if it is provided.
+ *        If SCRIPET_PATH is "-" or not present, enters interactive mode,
+ *        interpreting console input.
+ */
+
 
 static const size_t INITIAL_CMD_ARGV_LEN = 4;
 static const size_t INITIAL_CMD_PIPELINE_LEN = 4;
@@ -40,17 +45,136 @@ static struct rlimit cmdLimits[] = {{RLIMIT_AS},
                                     {RLIMIT_CPU}};
 
 
-EnvCmd parseEnvCmd(char *cmdString) {
-    assert(cmdString != NULL);
-
-    EnvCmd cmd;
-    cmd.varName = strtok(cmdString + 1, WHITESPACE);
-    cmd.varValue = strtok(NULL, WHITESPACE);
-
-    cmd.action = (cmd.varValue != NULL) ? SET : UNSET;
-
-    return cmd;
+void setResourceLimits(void) {
+    if (setrlimit(RLIMIT_AS, &cmdLimits[MEMORY]) == -1) {
+        perror("Error setting memory limit");
+        exit(EXIT_FAILURE);
+    }
+    if (setrlimit(RLIMIT_CPU, &cmdLimits[CPU]) == -1) {
+        perror("Error setting cpu time limit");
+        exit(EXIT_FAILURE);
+    }
 }
+
+
+bool isStandard(int fd) {
+    return fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO;
+}
+
+pid_t runExecCmd(ExecCmd *cmd, int inputFd, int outputFd) {
+    assert(cmd != NULL);
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        safe_dup2(inputFd, STDIN_FILENO);
+        safe_dup2(outputFd, STDOUT_FILENO);
+
+        setResourceLimits();
+
+        if (execvp(cmd->cmd, cmd->argv) == -1) {
+            fprintf(stderr, "Cannot execute %s: %s\n", cmd->cmd, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+    } else if (pid > 0) {
+        if (!isStandard(inputFd)) safe_close(inputFd);
+        if (!isStandard(outputFd)) safe_close(outputFd);
+
+        return cmd->pid = pid;
+    }
+
+    perror("Error while forking");
+    exit(EXIT_FAILURE);
+}
+
+
+static size_t hashExecCmdByPid(void *pid) {
+    uintptr_t pidValue = (uintptr_t) pid;
+    size_t hash = (size_t) pidValue;
+
+    if (sizeof(size_t) >= sizeof(uintptr_t)) return hash;
+
+    while (pidValue != 0) {
+        pidValue >>= sizeof(size_t) * CHAR_BIT;
+        hash ^= pidValue;
+    }
+
+    return hash;
+}
+
+Pipe Pipe_new(void) {
+    int fds[2];
+    if (pipe(fds) == -1) {
+        perror("Error opening pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    return (Pipe) {fds[1], fds[0]};
+}
+
+void *fitVoidPointer(void *pValue, size_t valueSize) {
+    assert(valueSize <= sizeof(unsigned long long));
+
+    unsigned long long value = 0;
+    memcpy(&value, pValue, valueSize);
+
+    if (sizeof(void *) >= sizeof(long long)) return (void *) value;
+
+    uintptr_t pointerValue = (uintptr_t) value;
+    while (value != 0) {
+        value >>= sizeof(uintptr_t) * CHAR_BIT;
+        pointerValue ^= value;
+    }
+
+    return (void *) pointerValue;
+}
+
+HashMap *runPipeline(Pipeline pipeline) {
+    HashMap *cmdsByPid = HashMap_new(hashExecCmdByPid);
+
+    int inputFd = STDIN_FILENO, outputFd;
+    int i;
+    for (i = 0; i < pipeline.cmdCount - 1; ++i) {
+        Pipe p = Pipe_new();
+        outputFd = p.sink;
+
+        runExecCmd(&pipeline.cmds[i], inputFd, outputFd);
+        HashMap_add(cmdsByPid, fitVoidPointer(&pipeline.cmds[i].pid, sizeof(pid_t)), &pipeline.cmds[i]);
+
+        inputFd = p.tap;
+    }
+    outputFd = STDOUT_FILENO;
+    runExecCmd(&pipeline.cmds[i], inputFd, outputFd);
+    HashMap_add(cmdsByPid, fitVoidPointer(&pipeline.cmds[i].pid, sizeof(pid_t)), &pipeline.cmds[i]);
+
+    return cmdsByPid;
+}
+
+void waitForPipeline(HashMap *cmdsByPid) {
+    int status = 0;
+    struct rusage rusage;
+
+    while (!HashMap_isEmpty(cmdsByPid)) {
+        pid_t pid = wait3(&status, 0, &rusage);
+        ExecCmd *cmd = HashMap_remove(cmdsByPid, fitVoidPointer(&pid, sizeof(pid)));
+
+//        fprintf(stderr, "%s%s%2s%d%-5s", cmd->cmd, " terminated", "(", WEXITSTATUS(status), ")");
+
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+            fprintf(stderr, "Error executing command at line %u\n", lineCount);
+            exit(WEXITSTATUS(status));
+        }
+
+//        fprintf(stderr, "%-8s%-10d%20s%9li%-10s%-15s%4li%s%li%-5s%-15s%4li%s%li%-5s\n",
+//                "PID:", pid,
+//                "Max resident memory:", rusage.ru_maxrss, " kB",
+//                "User time:", rusage.ru_utime.tv_sec, ".", rusage.ru_utime.tv_usec, " s",
+//                "System time:", rusage.ru_stime.tv_sec, ".", rusage.ru_stime.tv_usec, " s");
+
+        cmd->pid = 1;
+        safe_free(cmd->argv);
+    }
+}
+
 
 int parseArray(char *parsed, char ***pArray, size_t arraySize, size_t offset, const char *delimiters) {
     assert(arraySize >= 2);
@@ -116,6 +240,19 @@ Pipeline parsePipeline(char *line) {
     return pipeline;
 }
 
+
+EnvCmd parseEnvCmd(char *cmdString) {
+    assert(cmdString != NULL);
+
+    EnvCmd cmd;
+    cmd.varName = strtok(cmdString + 1, WHITESPACE);
+    cmd.varValue = strtok(NULL, WHITESPACE);
+
+    cmd.action = (cmd.varValue != NULL) ? SET : UNSET;
+
+    return cmd;
+}
+
 void runEnvCmd(EnvCmd cmd) {
     if (cmd.varName == NULL) return;
 
@@ -135,131 +272,6 @@ void runEnvCmd(EnvCmd cmd) {
     }
 }
 
-void setResourceLimits(void) {
-    if (setrlimit(RLIMIT_AS, &cmdLimits[MEMORY]) == -1) {
-        perror("Error setting memory limit");
-        exit(EXIT_FAILURE);
-    }
-    if (setrlimit(RLIMIT_CPU, &cmdLimits[CPU]) == -1) {
-        perror("Error setting cpu time limit");
-        exit(EXIT_FAILURE);
-    }
-}
-
-Pipe Pipe_new(void) {
-    int fds[2];
-    if (pipe(fds) == -1) {
-        perror("Error opening pipe");
-        exit(EXIT_FAILURE);
-    }
-
-    return (Pipe) {fds[1], fds[0]};
-}
-
-bool isStandard(int fd) {
-    return fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO;
-}
-
-pid_t runExecCmd(ExecCmd *cmd, int inputFd, int outputFd) {
-    assert(cmd != NULL);
-
-    pid_t pid = fork();
-    if (pid == 0) {
-        safe_dup2(inputFd, STDIN_FILENO);
-        safe_dup2(outputFd, STDOUT_FILENO);
-
-        setResourceLimits();
-
-        if (execvp(cmd->cmd, cmd->argv) == -1) {
-            fprintf(stderr, "Cannot execute %s: %s\n", cmd->cmd, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-    } else if (pid > 0) {
-        if (!isStandard(inputFd)) safe_close(inputFd);
-        if (!isStandard(outputFd)) safe_close(outputFd);
-
-        return cmd->pid = pid;
-    }
-
-    perror("Error while forking");
-    exit(EXIT_FAILURE);
-}
-
-static size_t hashExecCmdByPid(void *pid) {
-    long long pidValue = (long long) pid;
-    size_t hash = (size_t) pidValue;
-
-    if (sizeof(size_t) >= sizeof(void *)) return hash;
-
-    while (pidValue != 0) {
-        pidValue >>= sizeof(size_t) * 8;
-        hash ^= (size_t) pid;
-    }
-
-    return hash;
-}
-
-void *fitVoidPointer(void *pValue, size_t valueSize) {
-    long long value = 0;
-    memcpy(&value, pValue, valueSize);
-
-    if (sizeof(void *) >= valueSize) return (void *) value;
-
-    long long pointerValue = value;
-    while (value != 0) {
-        value >>= sizeof(void *) * 8;
-        pointerValue ^= value;
-    }
-
-    return (void *) pointerValue;
-}
-
-HashMap *runPipeline(Pipeline pipeline) {
-    HashMap *cmdsByPid = HashMap_new(hashExecCmdByPid);
-
-    int inputFd = STDIN_FILENO, outputFd;
-    int i;
-    for (i = 0; i < pipeline.cmdCount - 1; ++i) {
-        Pipe p = Pipe_new();
-        outputFd = p.sink;
-
-        runExecCmd(&pipeline.cmds[i], inputFd, outputFd);
-        HashMap_add(cmdsByPid, fitVoidPointer(&pipeline.cmds[i].pid, sizeof(pid_t)), &pipeline.cmds[i]);
-
-        inputFd = p.tap;
-    }
-    outputFd = STDOUT_FILENO;
-    runExecCmd(&pipeline.cmds[i], inputFd, outputFd);
-    HashMap_add(cmdsByPid, fitVoidPointer(&pipeline.cmds[i].pid, sizeof(pid_t)), &pipeline.cmds[i]);
-
-    return cmdsByPid;
-}
-
-void waitForPipeline(HashMap *cmdsByPid) {
-    int status = 0;
-    struct rusage rusage;
-
-    while (!HashMap_isEmpty(cmdsByPid)) {
-        pid_t pid = wait3(&status, 0, &rusage);
-        ExecCmd *cmd = HashMap_remove(cmdsByPid, fitVoidPointer(&pid, sizeof(pid)));
-
-//        fprintf(stderr, "%s%s%2s%d%-5s", cmd->cmd, " terminated", "(", WEXITSTATUS(status), ")");
-
-        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-            fprintf(stderr, "\nError executing command at line %u\n", lineCount);
-            exit(WEXITSTATUS(status));
-        }
-
-//        fprintf(stderr, "%-8s%-10d%20s%9li%-10s%-15s%4li%s%li%-5s%-15s%4li%s%li%-5s\n",
-//                "PID:", pid,
-//                "Max resident memory:", rusage.ru_maxrss, " kB",
-//                "User time:", rusage.ru_utime.tv_sec, ".", rusage.ru_utime.tv_usec, " s",
-//                "System time:", rusage.ru_stime.tv_sec, ".", rusage.ru_stime.tv_usec, " s");
-
-        cmd->pid = 1;
-        safe_free(cmd->argv);
-    }
-}
 
 void interpretLine(char *line, ssize_t lineLen) {
     size_t whiteSpaceLen = strspn(line, WHITESPACE);
@@ -313,11 +325,6 @@ void findResourceLimits(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-    if (argc < 2) {
-        printf("%s\n", USAGE);
-        return 0;
-    }
-
     FILE *inputStream = findInputStream(argc, argv);
     findResourceLimits(argc, argv);
 
