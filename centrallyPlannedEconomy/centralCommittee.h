@@ -14,6 +14,7 @@
 #include <sys/msg.h>
 #include <ctype.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #include "libhashmap/hashMap.h"
 
