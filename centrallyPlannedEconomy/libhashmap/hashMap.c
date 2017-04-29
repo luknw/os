@@ -5,23 +5,22 @@
 #include "hashMap.h"
 
 
-typedef struct HashMapEntry HashMapEntry;
-
-struct HashMapEntry {
-    void *key;
-    void *value;
-};
-
-static HashMapEntry *HashMapEntry_new(void *key, void *value) {
+static HashMapEntry *HashMapEntry_new(void *key, void *value, HashMapEntry *prev, HashMapEntry *next) {
     HashMapEntry *entry = safe_malloc(sizeof(HashMapEntry));
 
     entry->key = key;
     entry->value = value;
 
+    entry->prev = prev;
+    entry->next = next;
+
     return entry;
 }
 
 static void HashMapEntry_delete(HashMapEntry *entry) {
+    if (entry->prev != NULL) entry->prev->next = entry->next;
+    if (entry->next != NULL) entry->next->prev = entry->prev;
+
     safe_free(entry);
 }
 
@@ -38,6 +37,9 @@ HashMap *HashMap_new(size_t(*hashcode)(void *key)) {
     map->bucketCount = HashMap_DEFAULT_BUCKET_COUNT;
     map->buckets = safe_calloc(map->bucketCount, sizeof(LinkedList *));
 
+    map->entries = HashMapEntry_new(NULL, NULL, NULL, NULL);
+    map->entries->prev = map->entries->next = map->entries;
+
     map->hashcode = hashcode;
 
     map->size = 0;
@@ -47,13 +49,13 @@ HashMap *HashMap_new(size_t(*hashcode)(void *key)) {
 
 void HashMap_delete(HashMap *map) {
     for (LinkedList **bucket = map->buckets; map->bucketCount-- > 0; ++bucket) {
-        if (*bucket == NULL) continue;
-
-        while (!LinkedList_isEmpty(*bucket)) {
-            HashMapEntry_delete(LinkedList_removeBack(*bucket));
-        }
-        LinkedList_delete(*bucket);
+        if (*bucket != NULL) LinkedList_delete(*bucket);
     }
+
+    while (map->entries->next != map->entries) {
+        HashMapEntry_delete(map->entries->next);
+    }
+    HashMapEntry_delete(map->entries);
 
     safe_free(map);
 }
@@ -63,7 +65,11 @@ void HashMap_add(HashMap *map, void *key, void *value) {
 
     if (map->buckets[hash] == NULL) map->buckets[hash] = LinkedList_new();
 
-    LinkedList_addFront(map->buckets[hash], HashMapEntry_new(key, value));
+    HashMapEntry *newEntry = HashMapEntry_new(key, value, map->entries->prev, map->entries);
+    map->entries->prev->next = newEntry;
+    map->entries->prev = newEntry;
+
+    LinkedList_addFront(map->buckets[hash], newEntry);
 
     (map->size)++;
 }
@@ -85,7 +91,7 @@ void *HashMap_remove(HashMap *map, void *key) {
     if (bucket == NULL) return NULL;
 
     HashMapEntry *entry = HashMap_findEntryInBucket(bucket, key);
-    if(entry == NULL) return NULL;
+    if (entry == NULL) return NULL;
 
     HashMapEntry *removed = LinkedList_remove(bucket, entry);
 

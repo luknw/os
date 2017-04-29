@@ -12,10 +12,21 @@
 #include "../liblinkedlist/linkedList.h"
 
 
+typedef struct HashMapEntry HashMapEntry;
 typedef struct HashMap HashMap;
+
+
+struct HashMapEntry {
+    void *key;
+    void *value;
+
+    HashMapEntry *prev;
+    HashMapEntry *next;
+};
 
 struct HashMap {
     LinkedList **buckets;
+    HashMapEntry *entries;
 
     size_t (*hashcode)(void *key);
 

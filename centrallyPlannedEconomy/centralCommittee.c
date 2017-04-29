@@ -1,3 +1,6 @@
+#include <sys/msg.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "centralCommittee.h"
 
 
@@ -9,20 +12,43 @@ static char *const CREATE_QUEUE_ERROR = "Error creating queue";
 static char *const RECEIVE_MSG_ERROR = "Error receiving message";
 static char *const SEND_MSG_ERROR = "Error sending message";
 static char *const CLOSE_QUEUE_ERROR = "Error closing server queue";
+static char *const UNLINK_QUEUE_ERROR = "Erorr unlinking queue";
+static char *const OPEN_QUEUE_ERROR = "Error opening queue";
 
 
 static HashMap *clientQueues;
 static bool shutdownFlag;
 
 
-void initShutdown(MessageContent *msg, ssize_t msgSize) {
+void initShutdown(MessageContent *msg) {
     shutdownFlag = true;
 }
 
-void registerClient(MessageContent *msg, ssize_t msgSize) {
+
+static void sendMessage(QueueDescriptor queue, Message *message) {
+#ifndef POSIX_QUEUES
+    if (msgsnd(queue, message, sizeof((*message).content), 0) == -1) {
+#else
+        if (mq_send(queue, (const char *) message, MAX_MSG_SIZE, 0) == -1) {
+#endif
+        perror(SEND_MSG_ERROR);
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+void registerClient(MessageContent *msg) {
     Client client;
     client.pid = msg->senderPid;
-    client.queueId = *(int *) msg->text;
+#ifndef POSIX_QUEUES
+    client.queueId = *(QueueDescriptor *) msg->text;
+#else
+    client.queueId = mq_open(msg->text, O_WRONLY);
+    if (client.queueId == -1) {
+        perror(OPEN_QUEUE_ERROR);
+        exit(EXIT_FAILURE);
+    }
+#endif
 
     HashMap_add(clientQueues, (void *) client.pid, (void *) client.queueId);
 
@@ -32,24 +58,17 @@ void registerClient(MessageContent *msg, ssize_t msgSize) {
     memcpy(response.content.text, &msg->senderPid, sizeof(msg->senderPid));
     response.content.text[sizeof(response.content.senderPid)] = '\0';
 
-    if (msgsnd(client.queueId, &response, sizeof(response.content), 0) == -1) {
-        perror(SEND_MSG_ERROR);
-        exit(EXIT_FAILURE);
-    }
+    sendMessage(client.queueId, &response);
 }
 
-void echoService(MessageContent *msg, ssize_t msgSize) {
+void echoService(MessageContent *msg) {
     Message response;
     response.mtype = ECHO;
     response.content.senderPid = getpid();
-    strncpy(response.content.text, msg->text, MAX_MSG_TEXT_SIZE);
+    strncpy(response.content.text, msg->text, MAX_MSG_TEXT_SIZE - 1);
 
-    int clientQueueId = (int) HashMap_get(clientQueues, (void *) msg->senderPid);
-
-    if (msgsnd(clientQueueId, &response, sizeof(response.content), 0) == -1) {
-        perror(SEND_MSG_ERROR);
-        exit(EXIT_FAILURE);
-    }
+    QueueDescriptor clientQueueId = (QueueDescriptor) HashMap_get(clientQueues, (void *) msg->senderPid);
+    sendMessage(clientQueueId, &response);
 }
 
 static void mapString(char *string, int (*mapped)(int)) {
@@ -59,39 +78,31 @@ static void mapString(char *string, int (*mapped)(int)) {
     }
 }
 
-void capitalizeService(MessageContent *msg, ssize_t msgSize) {
+void capitalizeService(MessageContent *msg) {
     Message response;
     response.mtype = CAPITALIZE;
     response.content.senderPid = getpid();
-    strncpy(response.content.text, msg->text, MAX_MSG_TEXT_SIZE);
+    strncpy(response.content.text, msg->text, MAX_MSG_TEXT_SIZE - 1);
 
     mapString(response.content.text, toupper);
 
-    int clientQueueId = (int) HashMap_get(clientQueues, (void *) msg->senderPid);
-
-    if (msgsnd(clientQueueId, &response, sizeof(response.content), 0) == -1) {
-        perror(SEND_MSG_ERROR);
-        exit(EXIT_FAILURE);
-    }
+    QueueDescriptor clientQueueId = (QueueDescriptor) HashMap_get(clientQueues, (void *) msg->senderPid);
+    sendMessage(clientQueueId, &response);
 }
 
-void timeService(MessageContent *msg, ssize_t msgSize) {
+void timeService(MessageContent *msg) {
     Message response;
     response.mtype = TIME;
     response.content.senderPid = getpid();
     time_t now = time(NULL);
-    strncpy(response.content.text, ctime(&now), MAX_MSG_TEXT_SIZE);
+    strncpy(response.content.text, ctime(&now), MAX_MSG_TEXT_SIZE - 1);
 
-    mapString(response.content.text, toupper);
-
-    int clientQueueId = (int) HashMap_get(clientQueues, (void *) msg->senderPid);
-
-    if (msgsnd(clientQueueId, &response, sizeof(response.content), 0) == -1) {
-        perror(SEND_MSG_ERROR);
-        exit(EXIT_FAILURE);
-    }
+    QueueDescriptor clientQueueId = (QueueDescriptor) HashMap_get(clientQueues, (void *) msg->senderPid);
+    sendMessage(clientQueueId, &response);
 }
 
+
+#ifndef POSIX_QUEUES
 
 static char *getQueuePath(void) {
     char *path = getenv(HOME);
@@ -104,6 +115,7 @@ static char *getQueuePath(void) {
     return path;
 }
 
+
 static key_t getQueueKeyForPath(char *queuePath) {
     key_t key = ftok(queuePath, PROJ_ID);
 
@@ -115,17 +127,49 @@ static key_t getQueueKeyForPath(char *queuePath) {
     return key;
 }
 
-static void exit_removeQueue(int ignored, void *pQueueDescriptor) {
-    if (msgctl(*(int *) pQueueDescriptor, IPC_RMID, NULL) == -1) {
-        perror(CLOSE_QUEUE_ERROR);
-    }
-    free(pQueueDescriptor);
+#else
+
+static char *getQueuePath(void) {
+    return SERVER_QUEUE_PATH;
 }
 
-static int createQueueForKey(key_t key) {
-    int *queueDescriptor = safe_malloc(sizeof(int));
+#endif
 
-    *queueDescriptor = msgget(key, IPC_CREAT | 0600);
+#ifndef POSIX_QUEUES
+
+static void exit_removeQueue(int ignored, void *pQueueDescriptor) {
+    if (msgctl(*(QueueDescriptor *) pQueueDescriptor, IPC_RMID, NULL) == -1) {
+        perror(CLOSE_QUEUE_ERROR);
+    }
+    safe_free(pQueueDescriptor);
+}
+
+#else
+
+static void exit_removeQueue(int ignored, void *pQueueDescriptor) {
+    if (mq_close(*(QueueDescriptor *) pQueueDescriptor) == -1) {
+        perror(CLOSE_QUEUE_ERROR);
+    }
+    safe_free(pQueueDescriptor);
+
+    if (mq_unlink(getQueuePath()) == -1) {
+        perror(UNLINK_QUEUE_ERROR);
+    }
+}
+
+#endif
+
+#ifndef POSIX_QUEUES
+
+static QueueDescriptor createQueue(key_t key) {
+    QueueDescriptor *queueDescriptor = safe_malloc(sizeof(QueueDescriptor));
+    *queueDescriptor = msgget(key, IPC_CREAT | S_IRUSR | S_IWUSR);
+#else
+
+    static QueueDescriptor createQueue() {
+        QueueDescriptor *queueDescriptor = safe_malloc(sizeof(QueueDescriptor));
+        *queueDescriptor = mq_open(getQueuePath(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR, NULL);
+#endif
 
     if (*queueDescriptor == -1) {
         perror(CREATE_QUEUE_ERROR);
@@ -136,8 +180,13 @@ static int createQueueForKey(key_t key) {
     return *queueDescriptor;
 }
 
-int createServerQueue(void) {
-    return createQueueForKey(getQueueKeyForPath(getQueuePath()));
+QueueDescriptor createServerQueue(void) {
+#ifndef POSIX_QUEUES
+    key_t key = getQueueKeyForPath(getQueuePath());
+    return createQueue(key);
+#else
+    return createQueue();
+#endif
 }
 
 
@@ -158,7 +207,39 @@ HashMap *registerMessageHandlers(void) {
 }
 
 
-void listenForMessages(int queue, HashMap *msgHandlers) {
+#ifdef POSIX_QUEUES
+
+void listenForMessages(QueueDescriptor queue, HashMap *msgHandlers) {
+    Message msgBuffer;
+    clientQueues = HashMap_new(keyPointerCastHash);
+
+    shutdownFlag = false;
+    while (!shutdownFlag) {
+        ssize_t msgTextSize = mq_receive(queue, (char *) &msgBuffer, MAX_MSG_SIZE, NULL);
+        if (msgTextSize == -1) {
+            perror(RECEIVE_MSG_ERROR);
+            exit(EXIT_FAILURE);
+        }
+
+        MessageHandler msgHandler = HashMap_get(msgHandlers, (void *) msgBuffer.mtype);
+        (*msgHandler)(&msgBuffer.content);
+    }
+
+    HashMapEntry *clientQueue = clientQueues->entries;
+    while (clientQueue->next != clientQueues->entries) {
+        clientQueue = clientQueue->next;
+        if (mq_close((QueueDescriptor) (clientQueue->value)) == -1) {
+            perror(CLOSE_QUEUE_ERROR);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    HashMap_delete(clientQueues);
+}
+
+#else
+
+void listenForMessages(QueueDescriptor queue, HashMap *msgHandlers) {
     Message msgBuffer;
 
     clientQueues = HashMap_new(keyPointerCastHash);
@@ -172,15 +253,17 @@ void listenForMessages(int queue, HashMap *msgHandlers) {
         }
 
         MessageHandler msgHandler = HashMap_get(msgHandlers, (void *) msgBuffer.mtype);
-        (*msgHandler)(&msgBuffer.content, msgTextSize);
+        (*msgHandler)(&msgBuffer.content);
     }
 
     HashMap_delete(clientQueues);
 }
 
+#endif
+
 
 int main(void) {
-    int queue = createServerQueue();
+    QueueDescriptor queue = createServerQueue();
     HashMap *messageHandlers = registerMessageHandlers();
 
     listenForMessages(queue, messageHandlers);

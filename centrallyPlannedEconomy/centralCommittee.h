@@ -10,16 +10,31 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
 #include <ctype.h>
 #include <time.h>
 #include <sys/stat.h>
 
-#include "libhashmap/hashMap.h"
-
 #include "executiveOrders.h"
 
+#ifndef POSIX_QUEUES
+
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+#else
+
+#include <fcntl.h>
+#include <mqueue.h>
+
+#endif
+
+#include "libhashmap/hashMap.h"
+
+#ifndef POSIX_QUEUES
+typedef int QueueDescriptor;
+#else
+typedef mqd_t QueueDescriptor;
+#endif
 
 typedef struct Client Client;
 

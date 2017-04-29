@@ -10,6 +10,7 @@ set(CENTRAL_COMMITTEE_SOURCES
         libhashmap/hashMap.c
         executiveOrders.h)
 add_executable(centralCommittee ${CENTRAL_COMMITTEE_SOURCES})
+target_link_libraries(centralCommittee rt)
 
 set(REGIONAL_COMMITTEE_SOURCES
         libsafe/safeAlloc.c libsafe/safeIO.c
@@ -18,3 +19,4 @@ set(REGIONAL_COMMITTEE_SOURCES
         regionalCommittee.c
         executiveOrders.h)
 add_executable(regionalCommittee ${REGIONAL_COMMITTEE_SOURCES})
+target_link_libraries(regionalCommittee rt)
