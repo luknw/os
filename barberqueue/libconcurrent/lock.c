@@ -7,8 +7,9 @@
 
 #ifndef POSIX_IPC
 
-
 #include <sys/stat.h>
+#include <stdint.h>
+
 #include "../libsafe/safe.h"
 
 
@@ -26,14 +27,14 @@ static sembuf unlockOperations[] = {{LOCKER,          1,  0},
 
 
 static void exit_removeSysVSemaphore(int ignored, void *sysVSemaphoreId) {
-    if (semctl((int) sysVSemaphoreId, 0, IPC_RMID) == -1) {
+    if (semctl((int) (uintptr_t) sysVSemaphoreId, 0, IPC_RMID) == -1) {
         perror(SEMAPHORE_REMOVE_ERROR);
     }
 }
 
 PoorMansLock *PoorMansLock_init(PoorMansLock *lock) {
     lock->semaphoreSetId = safe_semget(IPC_PRIVATE, 2, S_IRUSR | S_IWUSR);
-    safe_on_exit(exit_removeSysVSemaphore, (void *) lock->semaphoreSetId);
+    safe_on_exit(exit_removeSysVSemaphore, (void *) (uintptr_t) lock->semaphoreSetId);
 
     safe_semctl(lock->semaphoreSetId, 0, SETVAL, (semun) {1});
     return lock;

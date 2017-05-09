@@ -11,6 +11,7 @@ COMMON_SOURCE_FILES = barbershop.h \
         libsafe/safeSignal.c libsafe/safeSignal.h \
         libsafe/safeIpc.c libsafe/safeIpc.h \
         libsafe/safeExit.c libsafe/safeExit.h \
+        libsafe/safeIO.c libsafe/safeIO.h \
         liblogger/logger.c liblogger/logger.h
 
 BARBER_SOURCE_FILES = $(COMMON_SOURCE_FILES) barber.c waitingRoomQueue.c waitingRoomQueue.h
@@ -26,17 +27,17 @@ POSIX = _POSIX
 all: $(BARBER_EXECUTABLE_NAME)$(SYSV) $(CLIENT_EXECUTABLE_NAME)$(SYSV) $(BARBER_EXECUTABLE_NAME)$(POSIX) $(CLIENT_EXECUTABLE_NAME)$(POSIX)
 
 $(BARBER_EXECUTABLE_NAME)$(SYSV): $(BARBER_SOURCE_FILES)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -lrt -o $@
 
 $(CLIENT_EXECUTABLE_NAME)$(SYSV): $(CLIENT_SOURCE_FILES)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -lrt -o $@
 
 
 $(BARBER_EXECUTABLE_NAME)$(POSIX): $(BARBER_SOURCE_FILES)
-	$(CC) $(CFLAGS) $^ -lpthread -DPOSIX_IPC -o $@
+	$(CC) $(CFLAGS) $^ -lpthread -lrt -DPOSIX_IPC -o $@
 
 $(CLIENT_EXECUTABLE_NAME)$(POSIX): $(CLIENT_SOURCE_FILES)
-	$(CC) $(CFLAGS) $^ -lpthread -DPOSIX_IPC -o $@
+	$(CC) $(CFLAGS) $^ -lpthread -lrt -DPOSIX_IPC -o $@
 
 
 clean:

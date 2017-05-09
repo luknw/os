@@ -83,6 +83,13 @@ int safe_close(int fd) {
     return status;
 }
 
+void safe_ftruncate(int fd, off_t len) {
+    if (ftruncate(fd, len) == -1) {
+        perror("Error changing file length");
+        exit(EXIT_FAILURE);
+    }
+}
+
 off_t safe_lseek(int fd, off_t offset, int whence) {
     off_t offsetResult = lseek(fd, offset, whence);
     if (offsetResult == -1) {

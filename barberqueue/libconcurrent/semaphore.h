@@ -11,6 +11,8 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <assert.h>
+#include <stdint.h>
+
 
 
 typedef struct Semaphore Semaphore;

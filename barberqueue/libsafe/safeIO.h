@@ -34,6 +34,8 @@ int safe_fflush(FILE *stream);
 
 int safe_close(int fd);
 
+void safe_ftruncate(int fd, off_t len);
+
 __off_t safe_lseek(int fd, __off_t offset, int whence);
 
 ssize_t safe_read(int fd, void *buf, size_t count);

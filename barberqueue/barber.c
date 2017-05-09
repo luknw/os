@@ -2,8 +2,21 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <stdbool.h>
-#include <sys/shm.h>
 #include <time.h>
+
+
+#ifndef POSIX_IPC
+
+#include <sys/shm.h>
+
+#else
+
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#endif
 
 #include "libsafe/safe.h"
 #include "liblogger/logger.h"
@@ -14,7 +27,6 @@
 static char *const ABUSAGE = "Oy man, need to know me seat number";
 
 
-static char const SIGNAL_HANDLER_MSG[] = "signal handler\n";
 #define BARBER_SLEEP_MSG "Barber enters sleep"
 #define START_CLIENT_CUT_MSG "Barber starts cutting Mr. %d"
 #define END_CLIENT_CUT_MSG "Barber ends cutting Mr. %d"
@@ -22,16 +34,22 @@ static char const SIGNAL_HANDLER_MSG[] = "signal handler\n";
 static bool kitkat;
 
 static void signalHandler_dispenseKitkat(int ignored) {
-//    if (write(STDOUT_FILENO, SIGNAL_HANDLER_MSG, sizeof(SIGNAL_HANDLER_MSG)) == -1) {
-//        perror("Error handling interrupt signal");
-//    }
     kitkat = true;
 }
 
 
 static void exit_removeSharedMemory(int ignored, void *sharedMemoryId) {
-    safe_shmctl((int) sharedMemoryId, IPC_RMID, NULL);
+#ifndef POSIX_IPC
+    if (shmctl((int) (uintptr_t) sharedMemoryId, IPC_RMID, NULL) == -1) {
+        perror("Error removing sys V shared memory");
+    }
+#else
+    if (shm_unlink(getDefaultIpcPath()) == -1) {
+        perror("Error unlinking POSIX shared memory");
+    }
+#endif
 }
+
 
 Barbershop *openBarbershop(unsigned int seatCount) {
     kitkat = false;
@@ -48,10 +66,17 @@ Barbershop *openBarbershop(unsigned int seatCount) {
 
     size_t barbershopSize = sizeof(Barbershop) + (seatCount + 1) * sizeof(pid_t);
 
+#ifndef POSIX_IPC
     int sharedMemoryId = safe_shmget(getDefaultIpcKey(), barbershopSize, IPC_CREAT | S_IRUSR | S_IWUSR);
-    safe_on_exit(exit_removeSharedMemory, (void *) sharedMemoryId);
-
+    safe_on_exit(exit_removeSharedMemory, (void *) (uintptr_t) sharedMemoryId);
     Barbershop *b = safe_shmat(sharedMemoryId, NULL, 0);
+#else
+    int sharedMemoryId = safe_shm_open(getDefaultIpcPath(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+    safe_ftruncate(sharedMemoryId, barbershopSize);
+    safe_on_exit(exit_removeSharedMemory, (void *) (uintptr_t) sharedMemoryId);
+    Barbershop *b = safe_mmap(NULL, barbershopSize, PROT_READ | PROT_WRITE, MAP_SHARED, sharedMemoryId, 0);
+#endif
+
     PoorMansCondition_init(&b->clientReady);
     PoorMansLock_init(&b->waitingRoomLock);
     WaitingRoomQueue_init(&b->waitingRoomQueue, seatCount + 1);

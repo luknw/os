@@ -15,6 +15,8 @@ typedef struct sembuf sembuf;
 
 key_t getDefaultIpcKey(void);
 
+char *getDefaultIpcPath(void);
+
 sembuf sembuf_new(unsigned short semaphoreIndex, short operation, short flags);
 
 

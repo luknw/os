@@ -6,6 +6,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
 int safe_semget(key_t key, int semaphoreCount, int flags) {
@@ -69,4 +72,34 @@ int safe_shmctl(int sharedMemoryId, int command, shmid_ds *infoBuffer) {
     }
 
     return value;
+}
+
+
+int safe_shm_open(const char *name, int oflag, mode_t mode) {
+    int sharedMemoryId = shm_open(name, oflag, mode);
+
+    if (sharedMemoryId == -1) {
+        perror("Error getting POSIX shared memory");
+        exit(EXIT_FAILURE);
+    }
+
+    return sharedMemoryId;
+}
+
+void safe_shm_unlink(const char *name) {
+    if (shm_unlink(name) == -1) {
+        perror("Error unlinking POSIX shared memory");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void *safe_mmap(void *where, size_t len, int protection, int flags, int sharedMemoryId, off_t offset) {
+    void *sharedMemory = mmap(where, len, protection, flags, sharedMemoryId, offset);
+
+    if (sharedMemory == MAP_FAILED) {
+        perror("Error mapping POSIX shared memory");
+        exit(EXIT_FAILURE);
+    }
+
+    return sharedMemory;
 }

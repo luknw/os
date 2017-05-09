@@ -14,7 +14,7 @@ static char *const SEMAPHORE_TICKETS_SET_ERROR = "Error setting unlockSignaler t
 
 
 static void exit_removeSysVSemaphore(int ignored, void *sysVSemaphoreId) {
-    if (semctl((int) sysVSemaphoreId, 0, IPC_RMID) == -1) {
+    if (semctl((int) (uintptr_t) sysVSemaphoreId, 0, IPC_RMID) == -1) {
         perror(SEMAPHORE_REMOVE_ERROR);
     }
 }
@@ -25,7 +25,7 @@ Semaphore *Semaphore_init(Semaphore *s) {
         perror(SEMAPHORE_CREATE_ERROR);
         exit(EXIT_FAILURE);
     }
-    on_exit(exit_removeSysVSemaphore, (void *) s->id);
+    on_exit(exit_removeSysVSemaphore, (void *) (uintptr_t) s->id);
 
     return s;
 }

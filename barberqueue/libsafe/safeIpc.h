@@ -37,4 +37,11 @@ void *safe_shmat(int sharedMemoryId, const void *attachAt, int flags);
 int safe_shmctl(int sharedMemoryId, int command, shmid_ds *infoBuffer);
 
 
+int safe_shm_open(const char *name, int oflag, mode_t mode);
+
+void safe_shm_unlink(const char *name);
+
+void *safe_mmap(void *where, size_t len, int protection, int flags, int sharedMemoryId, off_t offset);
+
+
 #endif //SAFE_IPC_H

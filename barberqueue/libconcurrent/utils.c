@@ -10,10 +10,11 @@
 
 
 static char *const HOME = "HOME";
-static char *const HOME_DIR_RESOLVE_ERROR = "Error resolving home directory path";
+static char *const DEFAULT_POSIX_IPC_PATH = "/libconcurrent";
 
 static const int PROJ_ID = 'f'; // short for: f**k you ftok
 
+static char *const HOME_DIR_RESOLVE_ERROR = "Error resolving home directory path";
 static char *const IPC_KEY_GENERATE_ERROR = "Error generating ipc key";
 
 
@@ -31,6 +32,11 @@ key_t getDefaultIpcKey(void) {
     }
 
     return key;
+}
+
+
+char *getDefaultIpcPath(void) {
+    return DEFAULT_POSIX_IPC_PATH;
 }
 
 

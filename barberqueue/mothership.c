@@ -5,6 +5,15 @@
 #include <errno.h>
 #include <time.h>
 
+
+#ifdef POSIX_IPC
+
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#endif
+
 #include "libsafe/safe.h"
 #include "liblogger/logger.h"
 #include "barbershop.h"
@@ -68,7 +77,6 @@ void spawnLongHairedBastard(Barbershop *barbershop, unsigned int barbings, sigse
 
 
 void reheatDinnerUntilBastardsComeBack(void) {
-
     int oldErrno = errno;
     errno = 0;
 
@@ -101,7 +109,18 @@ int main(int argc, char **argv) {
 
     sigset_t clientCutSignals = getClientCutSignals();
 
+#ifndef POSIX_IPC
     Barbershop *barbershop = safe_shmat(safe_shmget(getDefaultIpcKey(), 0, 0), NULL, 0);
+#else
+    int shmId = safe_shm_open(getDefaultIpcPath(), O_RDWR, S_IRUSR | S_IWUSR);
+    Barbershop *barbershop = safe_mmap(NULL, sizeof(Barbershop), PROT_READ | PROT_WRITE,
+                                       MAP_SHARED, shmId, 0);
+    size_t fullBarbershopSize = sizeof(Barbershop) + sizeof(pid_t) * barbershop->waitingRoomQueue.maxSize;
+    safe_close(shmId);
+    shmId = safe_shm_open(getDefaultIpcPath(), O_RDWR, S_IRUSR | S_IWUSR);
+    barbershop = safe_mmap(NULL, fullBarbershopSize, PROT_READ | PROT_WRITE,
+                           MAP_SHARED, shmId, 0);
+#endif
 
     while (bastards--) {
         spawnLongHairedBastard(barbershop, barbings, clientCutSignals);

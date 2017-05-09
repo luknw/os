@@ -21,10 +21,10 @@ set(COMMON_SOURCES
 add_executable(barber barber.c
         barbershop.h waitingRoomQueue.c
         ${COMMON_SOURCES})
-target_link_libraries(barber pthread)
+target_link_libraries(barber rt pthread)
 
 add_executable(mothership mothership.c
         libsafe/safeFork.c libsafe/safeFork.h
         ${COMMON_SOURCES})
-target_link_libraries(mothership pthread)
+target_link_libraries(mothership rt pthread)
 
