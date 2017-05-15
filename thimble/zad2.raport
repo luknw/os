@@ -1,10 +1,10 @@
-2.a.1 Nikt nie blokuje sygnału
+2.a.1 Sygnał do procesu, nikt nie blokuje sygnału
 Sygnały działają tak, jak w programie bez wątków.
 
-2.a.2 Główny wątek blokuje sygnał
+2.a.2 Sygnał do procesu, główny wątek blokuje sygnał
 Proces reaguje na sygnały jak poprzednio. Debugger pokazuje, że sygnał jest odbierany w wątku utworzonym jako pierwszy poza głównym.
 
-2.a.3 Wątki rejestrują otrzymywane sygnały
+2.a.3 Sygnał do procesu, wątki rejestrują otrzymywane sygnały
 Procedura obsługi sygnału jest wspólna dla wątków danego procesu.
 
 [10741.109917] 11063: <- Main thread
@@ -14,7 +14,7 @@ Procedura obsługi sygnału jest wspólna dla wątków danego procesu.
 [10742.415701] 11067: Signalling
 [10742.556119] 11064: Signal handler: PID: 11063 signal: 10
 
-Sygnał obsługiwany jest przez handler w wątku głównym (PID == TID). W przypadku, gdy jakieś wątki są odłączone, a wątek główny wywoła pthread_exit, sygnał nadal jest obsługiwany, ale przez handler w wątku utworzonym jako pierwszy poza głównym. W przypadku, gdy kolejne wątki się zakończą, rolę hosta handlera przejmuje najstarszy z aktualnie istniejących wątków. Nie testowano przypadku tworzenia nowych wątków w odłączonym wątku.
+Sygnał obsługiwany jest przez handler w wątku głównym (PID == TID). W przypadku, gdy wątek główny i kolejne się zakończą (pthread_exit), a istnieją inne odłączone wątki, rolę hosta handlera przejmuje najstarszy z aktualnie istniejących wątków. Nie testowano przypadku tworzenia nowych wątków w wątkach potomnych.
 
 2.a.4 Sygnał do wątku, który maskuje sygnał
 Sygnały SIGUSR1 oraz SIGTERM są blokowane i program nie reaguje na nie w żaden sposób. Sygnały SIGKILL oraz SIGSTOP odpowiednio zabijają oraz wstrzymują cały proces (wszystkie wątki).
