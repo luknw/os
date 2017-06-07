@@ -3,6 +3,12 @@
 #include <iostream>
 #include <librsync.h>
 
+static const char *const OLD = "res/oldDir";
+static const char *const OLD_SIG = "res/old.sig";
+static const char *const NEW = "res/newDir";
+static const char *const DELTA = "res/delta.bin";
+static const char *const UPDATED = "res/updatedDir";
+
 using namespace std;
 
 
@@ -19,8 +25,8 @@ void checkRsyncStatus(const rs_result &status) {
 int main() {
     cout << rs_librsync_version << endl;
 
-    FILE *oldFile = fopen("res/old.txt", "rb");
-    FILE *oldSigFile = fopen("res/old.sig", "wb");
+    FILE *oldFile = fopen(OLD, "rb");
+    FILE *oldSigFile = fopen(OLD_SIG, "wb");
 
     checkRsyncStatus(rs_sig_file(oldFile,
                                  oldSigFile,
@@ -31,7 +37,7 @@ int main() {
     fclose(oldSigFile);
 
 
-    oldSigFile = fopen("res/old.sig", "rb");
+    oldSigFile = fopen(OLD_SIG, "rb");
     rs_signature_t *oldSig;
 
     checkRsyncStatus(rs_loadsig_file(oldSigFile, &oldSig, NULL));
@@ -40,8 +46,8 @@ int main() {
     fclose(oldSigFile);
 
 
-    FILE *newFile = fopen("res/new.txt", "rb");
-    FILE *deltaFile = fopen("res/delta.bin", "wb");
+    FILE *newFile = fopen(NEW, "rb");
+    FILE *deltaFile = fopen(DELTA, "wb");
 
     checkRsyncStatus(rs_delta_file(oldSig, newFile, deltaFile, NULL));
 
@@ -49,8 +55,8 @@ int main() {
     fclose(newFile);
 
 
-    deltaFile = fopen("res/delta.bin", "rb");
-    FILE *updatedFile = fopen("res/updated.txt", "wb");
+    deltaFile = fopen(DELTA, "rb");
+    FILE *updatedFile = fopen(UPDATED, "wb");
 
     checkRsyncStatus(rs_patch_file(oldFile, deltaFile, updatedFile, NULL));
 
