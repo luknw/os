@@ -12,3 +12,6 @@ packed
 
 # Sripet files
 *.scp
+
+# Resources
+res/
