@@ -2,10 +2,11 @@
 #include <cstdio>
 #include <iostream>
 #include <librsync.h>
+#include "Client.h"
 
-static const char *const OLD = "res/oldDir";
+static const char *const OLD = "res/old.txt";
 static const char *const OLD_SIG = "res/old.sig";
-static const char *const NEW = "res/newDir";
+static const char *const NEW = "res/new.txt";
 static const char *const DELTA = "res/delta.bin";
 static const char *const UPDATED = "res/updatedDir";
 
@@ -22,7 +23,7 @@ void checkRsyncStatus(const rs_result &status) {
 }
 
 
-int main() {
+int rsyncTest() {
     cout << rs_librsync_version << endl;
 
     FILE *oldFile = fopen(OLD, "rb");
@@ -65,4 +66,21 @@ int main() {
 
 
     return 0;
+}
+
+int directoryCreationTest() {
+    ServerAddress serverAddress;
+    timespec syncInterval = {1, 0};
+    Client *forest = new Client("./res", serverAddress, syncInterval);
+
+    forest->run();
+
+    return 0;
+}
+
+int main() {
+    rsyncTest();
+    directoryCreationTest();
+
+    pthread_exit(NULL);
 }

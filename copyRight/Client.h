@@ -19,6 +19,9 @@ public:
 
     void sync();
 
+    static const string CACHE_DIRECTORY;
+    static const string CACHE_TIMESTAMP;
+
 protected:
     void openCache();
 
@@ -30,14 +33,19 @@ protected:
 
     pthread_t runDaemon();
 
-
-    string rootDirectory;
+    string rootPath;
+    string cachePath;
+    int fdCache;
     ServerAddress serverAddress;
     timespec syncInterval;
     pthread_t daemon;
 
 private:
     static void *repeatSync(void *);
+
+    int createCacheIfDoesNotExist(string &cachePath);
+
+    void touchCacheTimestamp();
 };
 
 
