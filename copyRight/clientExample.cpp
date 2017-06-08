@@ -8,11 +8,15 @@
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <iostream>
+#include "Metadata.h"
 
 int main(int argc, char *argv[]) {
     int sockfd = 0;
     ssize_t n = 0;
-    char recvBuff[1024];
+    Metadata meta(0, 0);
+    FILE *dataFile = fopen("res/received.bin", "w");
+    char dataBuffer[1024];
     struct sockaddr_in serv_addr;
 
     if (argc != 2) {
@@ -20,7 +24,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    memset(recvBuff, '0', sizeof(recvBuff));
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Error : Could not create socket \n");
         return 1;
@@ -41,16 +44,32 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    while ((n = read(sockfd, recvBuff, sizeof(recvBuff) - 1)) > 0) {
-        recvBuff[n] = 0;
-        if (fputs(recvBuff, stdout) == EOF) {
-            printf("\n Error : Fputs error\n");
+    if ((n = read(sockfd, &meta, sizeof(meta))) > 0) {
+        if (n < 0) {
+            printf("\n Read error \n");
+        }
+
+        std::cout << meta.dataType() << std::endl << meta.dataSize() << std::endl;
+        ssize_t expected = meta.dataSize();
+        while (expected > 0) {
+            ssize_t chunkSize = (expected > sizeof(dataBuffer))
+                                ? sizeof(dataBuffer) : (size_t) expected;
+            n = recv(sockfd, dataBuffer, (size_t) chunkSize, MSG_WAITALL);
+            std::cout << n << std::endl;
+            if (n != chunkSize) {
+                std::cout << "Chunk receive error" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            n = fwrite(dataBuffer, 1, (size_t) chunkSize, dataFile);
+            if (n != chunkSize) {
+                std::cout << "Chunk save error: " << n << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            expected -= n;
         }
     }
 
-    if (n < 0) {
-        printf("\n Read error \n");
-    }
+    fclose(dataFile);
 
     return 0;
 }

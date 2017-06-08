@@ -4,12 +4,12 @@ project(copyRight)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic")
 
-set(SOURCE_FILES main.cpp Client.cpp Client.h ServerAddress.cpp ServerAddress.h)
+set(SOURCE_FILES main.cpp Client.cpp Client.h ServerAddress.cpp ServerAddress.h Metadata.cpp Metadata.h)
 add_executable(copyRight ${SOURCE_FILES})
 
-add_executable(server serverExample.cpp)
+add_executable(server serverExample.cpp Metadata.cpp Metadata.h)
 
-add_executable(client clientExample.cpp)
+add_executable(client clientExample.cpp Metadata.cpp Metadata.h)
 
 find_library(RSYNC_LIBRARY rsync /usr/local/lib/)
 target_link_libraries(copyRight ${RSYNC_LIBRARY} pthread)

@@ -8,7 +8,7 @@ static const char *const OLD = "res/old.txt";
 static const char *const OLD_SIG = "res/old.sig";
 static const char *const NEW = "res/new.txt";
 static const char *const DELTA = "res/delta.bin";
-static const char *const UPDATED = "res/updatedDir";
+static const char *const UPDATED = "res/updated.txt";
 
 using namespace std;
 
@@ -79,8 +79,9 @@ int directoryCreationTest() {
 }
 
 int main() {
-    rsyncTest();
-    directoryCreationTest();
-
-    pthread_exit(NULL);
+    cout << 2 % 3 << " " << 3 % 2;
+//    rsyncTest();
+//    directoryCreationTest();
+//
+//    pthread_exit(NULL);
 }
